@@ -1,4 +1,6 @@
 import re
+import uuid
+
 from pydantic import BaseModel, EmailStr, field_validator, Field
 
 PHONE_NUMBER_PATTERN = re.compile(r"^\+?[1-9]\d{1,14}$")
@@ -11,14 +13,13 @@ class TunedModel(BaseModel):
     class Config:
         """Tells pydantic to convert even non-dict obj to json"""
 
-        orm_mode = True
         from_attributes = True
 
 
 class ShowUser(TunedModel):
     """Schema for representing a user in responses."""
 
-    id: int
+    user_id: uuid.UUID
     email: EmailStr
     username: str
     first_name: str

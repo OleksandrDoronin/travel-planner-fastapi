@@ -48,7 +48,17 @@ class UserService:
             # Add the new user to the database
             saved_user = await self.user_repository.add_user_to_db(user=new_user)
         except IntegrityError as err:
-            logger.error(f"Integrity error: {err}")
-            raise HTTPException(status_code=400, detail=f"Database error: {err}")
+            logger.error(f"Integrity error: {err}")  # Log the error
+            raise HTTPException(
+                status_code=400, detail=f"Database error: {err}"
+            )  # Inform the client
 
-        return ShowUser.from_orm(saved_user)
+        return ShowUser(
+            user_id=saved_user.id,
+            email=saved_user.email,
+            username=saved_user.username,
+            first_name=saved_user.first_name,
+            last_name=saved_user.last_name,
+            phone_number=saved_user.phone_number,
+            is_active=saved_user.is_active,
+        )

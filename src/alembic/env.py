@@ -4,7 +4,7 @@ from sqlalchemy import pool
 from alembic import context
 from config import settings
 from db.models import Base
-
+from db.models import User  # noqa
 
 # Retrieve Alembic's configuration object
 config = context.config

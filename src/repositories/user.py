@@ -10,9 +10,8 @@ class UserRepository:
 
     async def add_user_to_db(self, user: User) -> User:
         """Adds a new user to the database."""
-        self.db_session.add(user)  # Add the user to the session
-        await self.db_session.flush()  # Ensure the user is written to the database
-        await self.db_session.commit()  # Commit the transaction
+        self.db_session.add(user)
+        await self.db_session.flush()  # Flush to make sure changes are persisted
         return user
 
     async def get_user_by_username(self, username: str) -> Optional[User]:
