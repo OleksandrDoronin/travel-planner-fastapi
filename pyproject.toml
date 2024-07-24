@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "travel planner"
+version = "0.1.0"
+description = ""
+authors = ["OleksandrDoronin <oleksandr.doron@gmail.com>"]
+license = "MIT"
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = {extras = ["all"], version = "^0.111.1"}
+uvicorn = {extras = ["standard"], version = "^0.30.3"}
+sqlalchemy = {extras = ["asyncio"], version = "^2.0.31"}
+alembic = "^1.13.2"
+
+
+[tool.poetry.group.dev.dependencies]
+ruff = "^0.5.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

@@ -1,0 +1,21 @@
+# Virtual environment
+venv/
+*.virtualenv/
+.env
+
+# IDE - PyCharm
+.idea/
+*.iml
+
+# Python
+*.egg-info/
+*.egg/
+*.pyc
+__pycache__/
+.ruff_cache
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
