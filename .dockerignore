@@ -2,7 +2,6 @@
 *.pyo
 .git
 .gitignore
-*.env
 __pycache__/
 .ruff_cache
 *.log

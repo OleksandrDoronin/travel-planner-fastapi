@@ -14,7 +14,7 @@ if config.config_file_name is not None:
     fileConfig(config.config_file_name)
 
 # Set the SQLAlchemy URL from the configuration settings for Alembic
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL_ALEMBIC)
+config.set_main_option("sqlalchemy.url", settings.alembic_database_url)
 
 # Define the target metadata for Alembic to use for autogeneration
 target_metadata = Base.metadata

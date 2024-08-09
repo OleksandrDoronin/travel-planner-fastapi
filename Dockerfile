@@ -24,6 +24,7 @@ RUN poetry config virtualenvs.create false \
 # Copy the rest of the application code to the working directory
 COPY . /fastapi-app
 
+ENV PYTHONPATH=/fastapi-app/src
 # Expose port 8000 to be accessible from outside the container
 EXPOSE 8000
 

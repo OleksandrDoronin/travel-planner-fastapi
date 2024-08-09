@@ -5,7 +5,7 @@ from config import settings
 
 
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    settings.async_database_url,
     future=True,
     echo=True,
     execution_options={"isolation_level": "AUTOCOMMIT"},

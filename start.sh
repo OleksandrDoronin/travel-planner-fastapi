@@ -1,7 +1,8 @@
 #!/bin/sh
 
+cd /fastapi-app/src
 # Applying migrations
-poetry run alembic -c src/alembic.ini upgrade head
+poetry run alembic upgrade head
 
 # Running a FastAPI application with uvicorn
-poetry run uvicorn src.main:app --host 0.0.0.0 --port 8000 --reload
+poetry run uvicorn main:app --host 0.0.0.0 --port 8000 --reload

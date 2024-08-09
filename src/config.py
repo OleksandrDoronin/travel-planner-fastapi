@@ -2,8 +2,25 @@ from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
-    DATABASE_URL: str
-    DATABASE_URL_ALEMBIC: str
+    POSTGRES_DB: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
+    POSTGRES_HOST: str
+    POSTGRES_PORT: int
+
+    @property
+    def alembic_database_url(self) -> str:
+        return (
+            f"postgresql://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
+
+    @property
+    def async_database_url(self) -> str:
+        return (
+            f"postgresql+asyncpg://{self.POSTGRES_USER}:{self.POSTGRES_PASSWORD}"
+            f"@{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/{self.POSTGRES_DB}"
+        )
 
     class Config:
         env_file = "../.env"
