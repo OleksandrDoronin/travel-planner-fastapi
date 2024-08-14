@@ -3,10 +3,12 @@ from datetime import timedelta
 from typing import Optional
 
 import jwt
+from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 from config import settings
 
 bcrypt_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+oauth2_scheme = OAuth2PasswordBearer(tokenUrl="login/token")
 
 
 def get_password_hash(password: str) -> str:

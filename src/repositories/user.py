@@ -27,7 +27,7 @@ class UserRepository:
         """
         Retrieve a user from the database by their ID.
         """
-        query = select(User).where(User.user_id == user_id)  # Construct the query
+        query = select(User).where(User.id == user_id)  # Construct the query
         result = await self.db_session.execute(query)  # Execute the query
         user = result.scalars().first()  # Retrieve the first user from the result
         return user

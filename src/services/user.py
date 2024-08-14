@@ -1,6 +1,11 @@
+from typing import Optional
+from uuid import UUID
+
 from fastapi import HTTPException
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
+from starlette import status
+
 from db.models import User
 from repositories.user import UserRepository
 from schemas.user import UserCreate, ShowUser
@@ -61,4 +66,26 @@ class UserService:
             last_name=saved_user.last_name,
             phone_number=saved_user.phone_number,
             is_active=saved_user.is_active,
+        )
+
+    async def get_user_by_id(self, user_id: UUID) -> Optional[User]:
+        user = await self.user_repository.get_user_by_id(user_id=user_id)
+
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="User not found",
+            )
+        return user
+
+    async def get_user_show(self, user_id: UUID) -> ShowUser:
+        user = await self.get_user_by_id(user_id=user_id)
+        return ShowUser(
+            user_id=user.id,
+            email=user.email,
+            username=user.username,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            phone_number=user.phone_number,
+            is_active=user.is_active,
         )
