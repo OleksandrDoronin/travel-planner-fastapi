@@ -1,11 +1,19 @@
-from fastapi import APIRouter, Depends
+from uuid import UUID
+
+from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from starlette import status
 
-from dependencies import get_user_service, get_auth_service
+from db.models import User
+from dependencies import get_user_service, get_auth_service, get_current_user
 from schemas.user import ShowUser, UserCreate
 from security import oauth2_scheme
 from services.auth import AuthService
 from services.user import UserService
+import logging
+
+logger = logging.getLogger(__name__)
+
 
 router = APIRouter(prefix="/users", tags=["users"])
 
@@ -19,14 +27,52 @@ async def create_user(
 
     This endpoint registers a new user in the database.
     """
-    return await user_service.create_new_user(user_data=user_data)
+    try:
+        return await user_service.create_new_user(user_data=user_data)
+
+    except IntegrityError as err:
+        logger.error(f"Integrity error: {err}")
+        raise HTTPException(status_code=400, detail=f"Database error: {err}")
 
 
-@router.get("/me", status_code=status.HTTP_200_OK, response_model=ShowUser)
+@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_user(
+    current_user: User = Depends(get_current_user),
+    user_service: UserService = Depends(get_user_service),
+) -> None:
+    """
+    Delete the currently authenticated user.
+
+    This endpoint deletes the user who is currently authenticated.
+    The user is identified by the token provided in the Authorization header.
+    """
+
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
+    await user_service.delete_user(user_id=current_user.id)
+
+
+@router.get("/", status_code=status.HTTP_200_OK, response_model=ShowUser)
 async def get_user(
-    token: str = Depends(oauth2_scheme),
-    auth_service: AuthService = Depends(get_auth_service),
+    current_user: User = Depends(get_current_user),
     user_service: UserService = Depends(get_user_service),
 ) -> ShowUser:
-    current_user = await auth_service.get_current_user_from_token(token=token)
-    return await user_service.get_user_show(user_id=current_user.id)
+    """
+    Retrieve the details of the current user.
+
+    This endpoint returns the details of the currently authenticated user.
+    The user is identified by the token provided in the Authorization header.
+    """
+    if current_user is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
+        )
+
+    user = await user_service.get_user_show(user_id=current_user.id)
+    if user is None:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
+        )
+    return user

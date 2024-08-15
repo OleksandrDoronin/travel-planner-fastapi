@@ -1,18 +1,13 @@
 from typing import Optional
 from uuid import UUID
-
 from fastapi import HTTPException
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 from starlette import status
-
 from db.models import User
 from repositories.user import UserRepository
 from schemas.user import UserCreate, ShowUser
 from security import get_password_hash
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 class UserService:
@@ -30,16 +25,15 @@ class UserService:
             username=user_data.username
         )
         if existing_user_by_username:
-            raise HTTPException(status_code=400, detail="Username already registered")
+            raise ValueError("Username already registered")
 
         # Check if a user with the specified user email already exists.
         existing_user_by_email = await self.user_repository.get_user_by_email(
             email=user_data.email
         )
         if existing_user_by_email:
-            raise HTTPException(status_code=400, detail="Email already registered")
+            raise ValueError("Email already registered")
 
-        # Create a new User object with the provided data
         new_user = User(
             email=user_data.email,
             username=user_data.username,
@@ -48,16 +42,7 @@ class UserService:
             last_name=user_data.last_name,
             phone_number=user_data.phone_number,
         )
-
-        try:
-            # Add the new user to the database
-            saved_user = await self.user_repository.add_user_to_db(user=new_user)
-        except IntegrityError as err:
-            logger.error(f"Integrity error: {err}")  # Log the error
-            raise HTTPException(
-                status_code=400, detail=f"Database error: {err}"
-            )  # Inform the client
-
+        saved_user = await self.user_repository.add_user_to_db(user=new_user)
         return ShowUser(
             user_id=saved_user.id,
             email=saved_user.email,
@@ -68,14 +53,11 @@ class UserService:
             is_active=saved_user.is_active,
         )
 
+    async def delete_user(self, user_id: UUID):
+        return await self.user_repository.delete_user(user_id=user_id)
+
     async def get_user_by_id(self, user_id: UUID) -> Optional[User]:
         user = await self.user_repository.get_user_by_id(user_id=user_id)
-
-        if not user:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found",
-            )
         return user
 
     async def get_user_show(self, user_id: UUID) -> ShowUser:
