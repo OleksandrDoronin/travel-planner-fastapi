@@ -44,7 +44,7 @@ async def delete_user(
     Delete the currently authenticated user.
 
     This endpoint deletes the user who is currently authenticated.
-    The user is identified by the token provided in the Authorization header.
+    The user is identified by the token provided in the Authorization header
     """
 
     if current_user is None:
