@@ -1,14 +1,10 @@
-from uuid import UUID
-
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from starlette import status
 
 from db.models import User
-from dependencies import get_user_service, get_auth_service, get_current_user
+from dependencies import get_user_service, get_current_user
 from schemas.user import ShowUser, UserCreate
-from security import oauth2_scheme
-from services.auth import AuthService
 from services.user import UserService
 import logging
 
