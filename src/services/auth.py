@@ -1,8 +1,7 @@
-from typing import Optional
+from fastapi.params import Depends
 from jose import jwt, JWTError
 from fastapi import HTTPException
 from starlette import status
-from sqlalchemy.ext.asyncio import AsyncSession
 
 from config import settings
 from db.models import User
@@ -11,11 +10,10 @@ from security import bcrypt_context
 
 
 class AuthService:
-    def __init__(self, db: AsyncSession):
-        self.db_session = db
-        self.user_repository = UserRepository(db)
+    def __init__(self, user_repository: UserRepository = Depends(UserRepository)):
+        self.user_repository = user_repository
 
-    async def authenticate_user(self, username: str, password: str) -> Optional[User]:
+    async def authenticate_user(self, username: str, password: str) -> bool | User:
         user = await self.user_repository.get_user_by_username(username=username)
         if not user:
             return False

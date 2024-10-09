@@ -1,14 +1,17 @@
 from typing import Optional
 from uuid import UUID
 
+from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from db.database import get_db
 from db.models import User
 
 
 class UserRepository:
-    def __init__(self, db: AsyncSession):
+    def __init__(self, db: AsyncSession = Depends(get_db)):
         self.db_session = db
 
     async def add_user_to_db(self, user: User) -> User:

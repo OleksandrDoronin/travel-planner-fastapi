@@ -1,9 +1,7 @@
 from typing import Optional
 from uuid import UUID
-from fastapi import HTTPException
-from sqlalchemy.exc import NoResultFound
-from sqlalchemy.ext.asyncio import AsyncSession
-from starlette import status
+from fastapi.params import Depends
+
 from db.models import User
 from repositories.user import UserRepository
 from schemas.user import UserCreate, ShowUser
@@ -11,9 +9,8 @@ from security import get_password_hash
 
 
 class UserService:
-    def __init__(self, db: AsyncSession):
-        self.db_session = db
-        self.user_repository = UserRepository(db)
+    def __init__(self, user_repository: UserRepository = Depends(UserRepository)):
+        self.user_repository = user_repository
 
     async def create_new_user(self, user_data: UserCreate) -> ShowUser:
         """Creates a new user in the database.

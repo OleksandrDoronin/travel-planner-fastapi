@@ -3,7 +3,7 @@ from sqlalchemy.exc import IntegrityError
 from starlette import status
 
 from db.models import User
-from dependencies import get_user_service, get_current_user
+from dependencies import get_current_user
 from schemas.user import ShowUser, UserCreate
 from services.user import UserService
 import logging
@@ -16,7 +16,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ShowUser)
 async def create_user(
-    user_data: UserCreate, user_service: UserService = Depends(get_user_service)
+    user_data: UserCreate, user_service: UserService = Depends(UserService)
 ) -> ShowUser:
     """
     Create a new user.
@@ -34,7 +34,7 @@ async def create_user(
 @router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     current_user: User = Depends(get_current_user),
-    user_service: UserService = Depends(get_user_service),
+    user_service: UserService = Depends(UserService),
 ) -> None:
     """
     Delete the currently authenticated user.
@@ -53,7 +53,7 @@ async def delete_user(
 @router.get("/", status_code=status.HTTP_200_OK, response_model=ShowUser)
 async def get_user(
     current_user: User = Depends(get_current_user),
-    user_service: UserService = Depends(get_user_service),
+    user_service: UserService = Depends(UserService),
 ) -> ShowUser:
     """
     Retrieve the details of the current user.
