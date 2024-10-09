@@ -1,12 +1,15 @@
-from fastapi import Depends
-from sqlalchemy.ext.asyncio import AsyncSession
+from fastapi import Depends, HTTPException
+from db.models import User
+from security import oauth2_scheme
+from services.auth import AuthService
 
-from db.database import get_db
-from services.user import UserService
 
-
-async def get_user_service(db: AsyncSession = Depends(get_db)) -> UserService:
-    """
-    Dependency function to get an instance of UserService
-    """
-    return UserService(db)
+async def get_current_user(
+    token: str = Depends(oauth2_scheme), auth_service: AuthService = Depends()
+) -> User:
+    user = await auth_service.get_current_user_from_token(token)
+    if user is None:
+        raise HTTPException(
+            status_code=401, detail="Invalid authentication credentials"
+        )
+    return user

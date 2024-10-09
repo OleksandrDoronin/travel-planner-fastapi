@@ -1,19 +1,16 @@
-from fastapi import HTTPException
-from sqlalchemy.exc import IntegrityError
-from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional
+from uuid import UUID
+from fastapi.params import Depends
+
 from db.models import User
 from repositories.user import UserRepository
 from schemas.user import UserCreate, ShowUser
 from security import get_password_hash
-import logging
-
-logger = logging.getLogger(__name__)
 
 
 class UserService:
-    def __init__(self, db: AsyncSession):
-        self.db_session = db
-        self.user_repository = UserRepository(db)
+    def __init__(self, user_repository: UserRepository = Depends(UserRepository)):
+        self.user_repository = user_repository
 
     async def create_new_user(self, user_data: UserCreate) -> ShowUser:
         """Creates a new user in the database.
@@ -25,16 +22,15 @@ class UserService:
             username=user_data.username
         )
         if existing_user_by_username:
-            raise HTTPException(status_code=400, detail="Username already registered")
+            raise ValueError("Username already registered")
 
         # Check if a user with the specified user email already exists.
         existing_user_by_email = await self.user_repository.get_user_by_email(
             email=user_data.email
         )
         if existing_user_by_email:
-            raise HTTPException(status_code=400, detail="Email already registered")
+            raise ValueError("Email already registered")
 
-        # Create a new User object with the provided data
         new_user = User(
             email=user_data.email,
             username=user_data.username,
@@ -43,16 +39,7 @@ class UserService:
             last_name=user_data.last_name,
             phone_number=user_data.phone_number,
         )
-
-        try:
-            # Add the new user to the database
-            saved_user = await self.user_repository.add_user_to_db(user=new_user)
-        except IntegrityError as err:
-            logger.error(f"Integrity error: {err}")  # Log the error
-            raise HTTPException(
-                status_code=400, detail=f"Database error: {err}"
-            )  # Inform the client
-
+        saved_user = await self.user_repository.add_user_to_db(user=new_user)
         return ShowUser(
             user_id=saved_user.id,
             email=saved_user.email,
@@ -61,4 +48,23 @@ class UserService:
             last_name=saved_user.last_name,
             phone_number=saved_user.phone_number,
             is_active=saved_user.is_active,
+        )
+
+    async def delete_user(self, user_id: UUID):
+        return await self.user_repository.delete_user(user_id=user_id)
+
+    async def get_user_by_id(self, user_id: UUID) -> Optional[User]:
+        user = await self.user_repository.get_user_by_id(user_id=user_id)
+        return user
+
+    async def get_user_show(self, user_id: UUID) -> ShowUser:
+        user = await self.get_user_by_id(user_id=user_id)
+        return ShowUser(
+            user_id=user.id,
+            email=user.email,
+            username=user.username,
+            first_name=user.first_name,
+            last_name=user.last_name,
+            phone_number=user.phone_number,
+            is_active=user.is_active,
         )

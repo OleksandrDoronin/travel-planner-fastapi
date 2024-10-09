@@ -56,3 +56,8 @@ class UserCreate(BaseModel):
         if not re.search(r"\d", value):
             raise ValueError("Password must contain at least one digit")
         return value
+
+
+class Token(BaseModel):
+    access_token: str
+    token_type: str
