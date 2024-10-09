@@ -18,6 +18,7 @@ pyjwt = "^2.8.0"
 python-jose = "^3.3.0"
 bcrypt = "^4.2.0"
 passlib = "^1.7.4"
+aiosqlite = "^0.20.0"
 
 
 [tool.poetry.group.dev.dependencies]
