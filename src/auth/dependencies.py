@@ -1,7 +1,7 @@
 from fastapi import Depends, HTTPException
-from db.models import User
-from security import oauth2_scheme
-from services.auth import AuthService
+from models.users import User
+from auth.security import oauth2_scheme
+from auth.services.auth import AuthService
 
 
 async def get_current_user(

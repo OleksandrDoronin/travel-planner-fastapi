@@ -6,8 +6,8 @@ from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from db.database import get_db
-from db.models import User
+from database import get_db
+from models.users import User
 
 
 class UserRepository:

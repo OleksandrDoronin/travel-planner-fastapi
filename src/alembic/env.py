@@ -7,8 +7,8 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from config import settings
-from db.models import User, Base  # noqa
-
+from src.models import User  # noqa
+from database import Base
 
 config = context.config
 

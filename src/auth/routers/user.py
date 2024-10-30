@@ -2,10 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.exc import IntegrityError
 from starlette import status
 
-from db.models import User
-from dependencies import get_current_user
-from schemas.user import ShowUser, UserCreate
-from services.user import UserService
+from models.users import User
+from auth.dependencies import get_current_user
+from auth.schemas.user import ShowUser, UserCreate
+from auth.services.user import UserService
 import logging
 
 logger = logging.getLogger(__name__)
