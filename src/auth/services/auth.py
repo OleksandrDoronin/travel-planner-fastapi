@@ -1,12 +1,11 @@
-from fastapi.params import Depends
-from jose import jwt, JWTError
-from fastapi import HTTPException
-from starlette import status
-
-from config import settings
-from models.users import User
 from auth.repositories.user import UserRepository
 from auth.security import bcrypt_context
+from config import settings
+from fastapi import HTTPException
+from fastapi.params import Depends
+from jose import JWTError, jwt
+from models.users import User
+from starlette import status
 
 
 class AuthService:
@@ -24,13 +23,11 @@ class AuthService:
     async def get_current_user_from_token(self, token: str) -> User:
         credentials_exception = HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Could not validate credentials",
+            detail='Could not validate credentials',
         )
         try:
-            payload = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-            )
-            username: str = payload.get("sub")
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            username: str = payload.get('sub')
             if username is None:
                 raise credentials_exception
         except JWTError:

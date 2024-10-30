@@ -1,13 +1,12 @@
 import uuid
 
-from sqlalchemy import Column, String, Boolean
-from sqlalchemy.dialects.postgresql import UUID
-
 from database import Base
+from sqlalchemy import Boolean, Column, String
+from sqlalchemy.dialects.postgresql import UUID
 
 
 class User(Base):
-    __tablename__ = "users"
+    __tablename__ = 'users'
 
     id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
     email = Column(String, unique=True, index=True, nullable=False)
@@ -19,4 +18,4 @@ class User(Base):
     phone_number = Column(String, nullable=False)
 
     def __repr__(self):
-        return f"<User(id={self.id}, username={self.username}, email={self.email})>"
+        return f'<User(id={self.id}, username={self.username}, email={self.email})>'
