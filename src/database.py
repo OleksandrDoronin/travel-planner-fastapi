@@ -1,8 +1,9 @@
 from typing import AsyncGenerator
-from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
-from sqlalchemy.orm import declarative_base
 
 from config import settings
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.orm import declarative_base
+
 
 Base = declarative_base()
 
@@ -10,7 +11,7 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     future=True,
     echo=True,
-    execution_options={"isolation_level": "AUTOCOMMIT"},
+    execution_options={'isolation_level': 'AUTOCOMMIT'},
 )
 
 async_session = async_sessionmaker(

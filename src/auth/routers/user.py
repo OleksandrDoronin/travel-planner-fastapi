@@ -1,23 +1,22 @@
-from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.exc import IntegrityError
-from starlette import status
+import logging
 
-from models.users import User
 from auth.dependencies import get_current_user
 from auth.schemas.user import ShowUser, UserCreate
 from auth.services.user import UserService
-import logging
+from fastapi import APIRouter, Depends, HTTPException
+from models.users import User
+from sqlalchemy.exc import IntegrityError
+from starlette import status
+
 
 logger = logging.getLogger(__name__)
 
 
-router = APIRouter(prefix="/users", tags=["users"])
+router = APIRouter(prefix='/users', tags=['users'])
 
 
-@router.post("/", status_code=status.HTTP_201_CREATED, response_model=ShowUser)
-async def create_user(
-    user_data: UserCreate, user_service: UserService = Depends(UserService)
-) -> ShowUser:
+@router.post('/', status_code=status.HTTP_201_CREATED, response_model=ShowUser)
+async def create_user(user_data: UserCreate, user_service: UserService = Depends(UserService)) -> ShowUser:
     """
     Create a new user.
 
@@ -27,11 +26,11 @@ async def create_user(
         return await user_service.create_new_user(user_data=user_data)
 
     except IntegrityError as err:
-        logger.error(f"Integrity error: {err}")
-        raise HTTPException(status_code=400, detail=f"Database error: {err}")
+        logger.error(f'Integrity error: {err}')
+        raise HTTPException(status_code=400, detail=f'Database error: {err}')
 
 
-@router.delete("/", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete('/', status_code=status.HTTP_204_NO_CONTENT)
 async def delete_user(
     current_user: User = Depends(get_current_user),
     user_service: UserService = Depends(UserService),
@@ -44,13 +43,11 @@ async def delete_user(
     """
 
     if current_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User not found')
     await user_service.delete_user(user_id=current_user.id)
 
 
-@router.get("/", status_code=status.HTTP_200_OK, response_model=ShowUser)
+@router.get('/', status_code=status.HTTP_200_OK, response_model=ShowUser)
 async def get_user(
     current_user: User = Depends(get_current_user),
     user_service: UserService = Depends(UserService),
@@ -62,13 +59,9 @@ async def get_user(
     The user is identified by the token provided in the Authorization header.
     """
     if current_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='User not found')
 
     user = await user_service.get_user_show(user_id=current_user.id)
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail='User not found')
     return user
