@@ -15,9 +15,7 @@ router = APIRouter(prefix="/users", tags=["users"])
 
 
 @router.post("/", status_code=status.HTTP_201_CREATED, response_model=ShowUser)
-async def create_user(
-    user_data: UserCreate, user_service: UserService = Depends(UserService)
-) -> ShowUser:
+async def create_user(user_data: UserCreate, user_service: UserService = Depends(UserService)) -> ShowUser:
     """
     Create a new user.
 
@@ -44,9 +42,7 @@ async def delete_user(
     """
 
     if current_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     await user_service.delete_user(user_id=current_user.id)
 
 
@@ -62,13 +58,9 @@ async def get_user(
     The user is identified by the token provided in the Authorization header.
     """
     if current_user is None:
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
 
     user = await user_service.get_user_show(user_id=current_user.id)
     if user is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="User not found"
-        )
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="User not found")
     return user

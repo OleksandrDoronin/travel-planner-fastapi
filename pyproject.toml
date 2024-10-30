@@ -30,3 +30,43 @@ httpx = "^0.27.0"
 [build-system]
 requires = ["poetry-core"]
 build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 120
+extend-exclude = [
+    "*/__init__.py",
+    "env/",
+    ".env",
+    ".env.*",
+    "alembic"
+]
+
+lint.ignore = [
+    "ANN003",   # ignore mandatory type annotations
+    "D105",     # ignore warnings for missing docstrings in magic methods
+    "D107",     # ignore warnings for missing docstrings in classes
+    "D200",     # single-line docstring requirements
+    "D204",     # ignore single-line docstring requirements
+]
+
+lint.select = [
+    "Q",    # flake8-quotes: checks for consistent quote usage
+    "I",    # isort: checks import sorting
+    "W",    # pycodestyle warnings: pycodestyle warnings
+    "F",    # pyflakes: unused variable and function errors
+    "E",    # pycodestyle errors: basic style errors
+]
+
+[tool.ruff.format]
+quote-style = "single"
+skip-magic-trailing-comma = false
+
+[tool.ruff.lint.flake8-quotes]
+docstring-quotes = "double"
+inline-quotes = "single"
+
+[tool.ruff.lint.isort]
+force-wrap-aliases = true
+split-on-trailing-comma = true
+lines-after-imports = 2
+combine-as-imports = true

@@ -42,9 +42,7 @@ class UserCreate(BaseModel):
     def validate_first_name(cls, value: str) -> str:
         """Validate that first and last names contain only letters and hyphens."""
         if not LETTER_MATCH_PATTERN.match(value):
-            raise ValueError(
-                "First name or last name should contain only letters and hyphens"
-            )
+            raise ValueError("First name or last name should contain only letters and hyphens")
         return value
 
     @field_validator("password")

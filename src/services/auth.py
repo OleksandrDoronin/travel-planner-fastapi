@@ -1,6 +1,8 @@
 from fastapi.params import Depends
 from jose import jwt, JWTError
 from fastapi import HTTPException
+
+
 from starlette import status
 
 from config import settings
@@ -27,9 +29,7 @@ class AuthService:
             detail="Could not validate credentials",
         )
         try:
-            payload = jwt.decode(
-                token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
-            )
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
             username: str = payload.get("sub")
             if username is None:
                 raise credentials_exception
