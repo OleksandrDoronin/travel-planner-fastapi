@@ -4,9 +4,9 @@ from fastapi import HTTPException
 from starlette import status
 
 from config import settings
-from db.models import User
-from repositories.user import UserRepository
-from security import bcrypt_context
+from models.users import User
+from auth.repositories.user import UserRepository
+from auth.security import bcrypt_context
 
 
 class AuthService:

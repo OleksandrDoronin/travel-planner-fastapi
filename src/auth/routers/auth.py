@@ -6,9 +6,9 @@ from fastapi import HTTPException
 from fastapi import status
 from fastapi.security import OAuth2PasswordRequestForm
 from config import settings
-from schemas.user import Token
-from security import create_access_token
-from services.auth import AuthService
+from auth.schemas.user import Token
+from auth.security import create_access_token
+from auth.services.auth import AuthService
 
 router = APIRouter(prefix="/login", tags=["login"])
 
