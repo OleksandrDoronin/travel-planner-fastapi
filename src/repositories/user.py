@@ -1,13 +1,12 @@
 from typing import Optional
 from uuid import UUID
 
+from db.database import get_db
+from db.models import User
 from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
-
-from db.database import get_db
-from db.models import User
 
 
 class UserRepository:
@@ -27,7 +26,7 @@ class UserRepository:
         user = result.scalars().first()
 
         if user is None:
-            raise NoResultFound(f"User with ID {user_id} not found")
+            raise NoResultFound(f'User with ID {user_id} not found')
 
         await self.db_session.delete(user)
         await self.db_session.commit()

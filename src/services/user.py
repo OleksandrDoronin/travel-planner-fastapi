@@ -1,9 +1,10 @@
 from typing import Optional
 from uuid import UUID
-from fastapi.params import Depends
+
 from db.models import User
+from fastapi.params import Depends
 from repositories.user import UserRepository
-from schemas.user import UserCreate, ShowUser
+from schemas.user import ShowUser, UserCreate
 from security import get_password_hash
 
 
@@ -19,12 +20,12 @@ class UserService:
         # Check if a user with the specified username already exists.
         existing_user_by_username = await self.user_repository.get_user_by_username(username=user_data.username)
         if existing_user_by_username:
-            raise ValueError("Username already registered")
+            raise ValueError('Username already registered')
 
         # Check if a user with the specified user email already exists.
         existing_user_by_email = await self.user_repository.get_user_by_email(email=user_data.email)
         if existing_user_by_email:
-            raise ValueError("Email already registered")
+            raise ValueError('Email already registered')
 
         new_user = User(
             email=user_data.email,
