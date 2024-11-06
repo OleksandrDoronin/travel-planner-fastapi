@@ -21,4 +21,4 @@ __pycache__/
 # Temporary files
 *.tmp
 
-src/test.db
+test.db

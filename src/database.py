@@ -11,7 +11,6 @@ engine = create_async_engine(
     settings.DATABASE_URL,
     future=True,
     echo=True,
-    execution_options={'isolation_level': 'AUTOCOMMIT'},
 )
 
 async_session = async_sessionmaker(
