@@ -1,12 +1,13 @@
 import logging
 
-from auth.dependencies import get_current_user
-from auth.schemas.user import ShowUser, UserCreate
-from auth.services.user import UserService
 from fastapi import APIRouter, Depends, HTTPException
-from models.users import User
 from sqlalchemy.exc import IntegrityError
 from starlette import status
+
+from src.auth.dependencies import get_current_user
+from src.auth.schemas.user import ShowUser, UserCreate
+from src.auth.services.user import UserService
+from src.models.users import User
 
 
 logger = logging.getLogger(__name__)

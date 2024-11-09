@@ -3,10 +3,13 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 import jwt
-from config import settings
 from fastapi.security import OAuth2PasswordBearer
 from passlib.context import CryptContext
 
+from src.config import get_settings
+
+
+settings = get_settings()
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger('passlib')

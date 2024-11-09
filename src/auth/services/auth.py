@@ -1,12 +1,15 @@
-from auth.repositories.user import UserRepository
-from auth.security import bcrypt_context
-from config import settings
 from fastapi import HTTPException
 from fastapi.params import Depends
 from jose import JWTError, jwt
-from models.users import User
 from starlette import status
 
+from src.auth.repositories.user import UserRepository
+from src.auth.security import bcrypt_context
+from src.config import get_settings
+from src.models.users import User
+
+
+settings = get_settings()
 
 class AuthService:
     def __init__(self, user_repository: UserRepository = Depends(UserRepository)):

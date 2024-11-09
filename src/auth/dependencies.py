@@ -1,7 +1,8 @@
-from auth.security import oauth2_scheme
-from auth.services.auth import AuthService
 from fastapi import Depends, HTTPException
-from models.users import User
+
+from src.auth.security import oauth2_scheme
+from src.auth.services.auth import AuthService
+from src.models.users import User
 
 
 async def get_current_user(token: str = Depends(oauth2_scheme), auth_service: AuthService = Depends()) -> User:

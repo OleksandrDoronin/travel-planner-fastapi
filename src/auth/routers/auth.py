@@ -1,13 +1,15 @@
 from datetime import timedelta
 
-from auth.schemas.user import Token
-from auth.security import create_access_token
-from auth.services.auth import AuthService
-from config import settings
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordRequestForm
 
+from src.auth.schemas.user import Token
+from src.auth.security import create_access_token
+from src.auth.services.auth import AuthService
+from src.config import get_settings
 
+
+settings = get_settings()
 router = APIRouter(prefix='/login', tags=['login'])
 
 

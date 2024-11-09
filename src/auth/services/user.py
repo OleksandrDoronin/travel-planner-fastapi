@@ -1,11 +1,12 @@
 from typing import Optional
 from uuid import UUID
 
-from auth.repositories.user import UserRepository
-from auth.schemas.user import ShowUser, UserCreate
-from auth.security import get_password_hash
 from fastapi.params import Depends
-from models.users import User
+
+from src.auth.repositories.user import UserRepository
+from src.auth.schemas.user import ShowUser, UserCreate
+from src.auth.security import get_password_hash
+from src.models.users import User
 
 
 class UserService:
