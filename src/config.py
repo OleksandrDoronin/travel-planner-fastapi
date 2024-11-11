@@ -10,6 +10,8 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int
     SOCIAL_AUTH_GOOGLE_OAUTH2_KEY: str
     SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET: str
+    GOOGLE_TOKEN_URL: str
+    GOOGLE_USERINFO_URL: str
 
     class Config:
         env_file = '.env'
