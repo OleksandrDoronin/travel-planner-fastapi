@@ -22,11 +22,15 @@ class GoogleOAuthClient:
                     'redirect_uri': redirect_uri,
                     'grant_type': 'authorization_code',
                 }
-                response = await client.post(settings.GOOGLE_TOKEN_URL, data=payload)
+                response = await client.post(
+                    settings.GOOGLE_TOKEN_URL, data=payload
+                )
                 response.raise_for_status()
                 return response.json()
         except httpx.HTTPStatusError as e:
-            logger.error(f'HTTP error occurred while fetching token: {repr(e)}')
+            logger.error(
+                f'HTTP error occurred while fetching token: {repr(e)}'
+            )
             raise ValueError('Failed to fetch token from Google')
         except Exception as e:
             logger.error(f'Failed to fetch token from Google: {repr(e)}')
@@ -37,11 +41,15 @@ class GoogleOAuthClient:
         try:
             async with httpx.AsyncClient() as client:
                 params = {'access_token': access_token}
-                response = await client.get(settings.GOOGLE_USERINFO_URL, params=params)
+                response = await client.get(
+                    settings.GOOGLE_USERINFO_URL, params=params
+                )
                 response.raise_for_status()
                 return response.json()
         except httpx.HTTPStatusError as e:
-            logger.error(f'HTTP error occurred while fetching user info: {repr(e)}')
+            logger.error(
+                f'HTTP error occurred while fetching user info: {repr(e)}'
+            )
             raise ValueError('Error fetching user info')
         except Exception as e:
             logger.error(f'Failed to fetch user info from Google: {repr(e)}')

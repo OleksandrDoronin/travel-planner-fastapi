@@ -11,10 +11,14 @@ logger = logging.getLogger(__name__)
 
 class GoogleOAuthUrlGenerator:
     @staticmethod
-    def get_google_auth_url(redirect_uri: str, state: str) -> GoogleLoginResponse:
+    def get_google_auth_url(
+        redirect_uri: str, state: str
+    ) -> GoogleLoginResponse:
         """Generates the Google OAuth URL."""
 
-        google_auth_request = GoogleAuthRequestSchema(redirect_uri=redirect_uri, state=state)
+        google_auth_request = GoogleAuthRequestSchema(
+            redirect_uri=redirect_uri, state=state
+        )
         try:
             query_params = {
                 'response_type': 'code',
@@ -26,7 +30,14 @@ class GoogleOAuthUrlGenerator:
                 'prompt': 'consent',
             }
             google_auth_url = urlunparse(
-                ('https', 'accounts.google.com', '/o/oauth2/v2/auth', '', urlencode(query_params), '')
+                (
+                    'https',
+                    'accounts.google.com',
+                    '/o/oauth2/v2/auth',
+                    '',
+                    urlencode(query_params),
+                    '',
+                )
             )
             return GoogleLoginResponse(url=google_auth_url)
 

@@ -11,12 +11,19 @@ from src.models.users import User
 
 settings = get_settings()
 
+
 class AuthService:
-    def __init__(self, user_repository: UserRepository = Depends(UserRepository)):
+    def __init__(
+        self, user_repository: UserRepository = Depends(UserRepository)
+    ):
         self.user_repository = user_repository
 
-    async def authenticate_user(self, username: str, password: str) -> bool | User:
-        user = await self.user_repository.get_user_by_username(username=username)
+    async def authenticate_user(
+        self, username: str, password: str
+    ) -> bool | User:
+        user = await self.user_repository.get_user_by_username(
+            username=username
+        )
         if not user:
             return False
         if not bcrypt_context.verify(password, user.hashed_password):
@@ -29,13 +36,17 @@ class AuthService:
             detail='Could not validate credentials',
         )
         try:
-            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+            payload = jwt.decode(
+                token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM]
+            )
             username: str = payload.get('sub')
             if username is None:
                 raise credentials_exception
         except JWTError:
             raise credentials_exception
-        user = await self.user_repository.get_user_by_username(username=username)
+        user = await self.user_repository.get_user_by_username(
+            username=username
+        )
         if user is None:
             raise credentials_exception
         return user
