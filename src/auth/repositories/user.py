@@ -36,13 +36,9 @@ class UserRepository:
         """
         Retrieve a user from the database by their username.
         """
-        query = select(User).where(
-            User.username == username
-        )  # Construct the query
+        query = select(User).where(User.username == username)  # Construct the query
         result = await self.db_session.execute(query)  # Execute the query
-        user = (
-            result.scalars().first()
-        )  # Retrieve the first user from the result
+        user = result.scalars().first()  # Retrieve the first user from the result
         return user
 
     async def get_user_by_id(self, user_id: UUID) -> Optional[User]:
@@ -51,9 +47,7 @@ class UserRepository:
         """
         query = select(User).where(User.id == user_id)  # Construct the query
         result = await self.db_session.execute(query)  # Execute the query
-        user = (
-            result.scalars().first()
-        )  # Retrieve the first user from the result
+        user = result.scalars().first()  # Retrieve the first user from the result
         return user
 
     async def get_user_by_email(self, email: str) -> Optional[User]:
@@ -62,7 +56,5 @@ class UserRepository:
         """
         query = select(User).where(User.email == email)  # Construct the query
         result = await self.db_session.execute(query)  # Execute the query
-        user = (
-            result.scalars().first()
-        )  # Retrieve the first user from the result
+        user = result.scalars().first()  # Retrieve the first user from the result
         return user

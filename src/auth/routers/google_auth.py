@@ -37,9 +37,7 @@ async def google_login(
         return google_auth_url
 
     except ValueError as e:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
-        )
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
     except Exception as e:
         logger.critical(f'Unexpected error: {repr(e)}', exc_info=True)

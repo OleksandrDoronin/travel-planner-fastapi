@@ -24,9 +24,7 @@ class User(Base):
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
 
-    social_account = relationship(
-        'SocialAccount', back_populates='user', uselist=False
-    )
+    social_account = relationship('SocialAccount', back_populates='user', uselist=False)
 
 
 class SocialAccount(Base):
@@ -35,14 +33,8 @@ class SocialAccount(Base):
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     service: Mapped[str] = mapped_column(nullable=False)
     social_account_id: Mapped[str] = mapped_column(unique=True)
-    access_token: Mapped[Optional[str]] = mapped_column(
-        unique=True, nullable=True
-    )
-    refresh_token: Mapped[Optional[str]] = mapped_column(
-        unique=True, nullable=True
-    )
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey('users.id', ondelete='CASCADE')
-    )
+    access_token: Mapped[Optional[str]] = mapped_column(unique=True, nullable=True)
+    refresh_token: Mapped[Optional[str]] = mapped_column(unique=True, nullable=True)
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
 
     user = relationship('User', back_populates='social_account')

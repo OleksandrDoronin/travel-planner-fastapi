@@ -1,19 +1,21 @@
 import logging
+from typing import Annotated
 from urllib.parse import urlencode, urlunparse
 
+from fastapi import Depends
+
 from src.auth.schemas.auth import GoogleAuthRequestSchema, GoogleLoginResponse
-from src.config import get_settings
+from src.config import Settings, get_settings
 
 
-settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
 class GoogleOAuthUrlGenerator:
-    @staticmethod
-    def get_google_auth_url(
-        redirect_uri: str, state: str
-    ) -> GoogleLoginResponse:
+    def __init__(self, settings: Annotated[Settings, Depends(get_settings)]):
+        self.settings = settings
+
+    def get_google_auth_url(self, redirect_uri: str, state: str) -> GoogleLoginResponse:
         """Generates the Google OAuth URL."""
 
         google_auth_request = GoogleAuthRequestSchema(
@@ -22,7 +24,7 @@ class GoogleOAuthUrlGenerator:
         try:
             query_params = {
                 'response_type': 'code',
-                'client_id': settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
+                'client_id': self.settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
                 'redirect_uri': google_auth_request.redirect_uri,
                 'state': google_auth_request.state,
                 'scope': 'email openid profile',

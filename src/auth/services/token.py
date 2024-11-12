@@ -53,16 +53,14 @@ class TokenService:
             )
             exp = payload.get('exp')
 
-            if exp is None or datetime.now(
-                timezone.utc
-            ) >= datetime.fromtimestamp(exp, tz=timezone.utc):
+            if exp is None or datetime.now(timezone.utc) >= datetime.fromtimestamp(
+                exp, tz=timezone.utc
+            ):
                 raise JWTError('Refresh token has expired.')
 
             user_id = payload.get('sub')
             if user_id is None:
-                raise JWTError(
-                    'Invalid refresh token: User ID not found in payload.'
-                )
+                raise JWTError('Invalid refresh token: User ID not found in payload.')
 
             return payload
 

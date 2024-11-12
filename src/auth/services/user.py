@@ -10,9 +10,7 @@ from src.models.users import User
 
 
 class UserService:
-    def __init__(
-        self, user_repository: UserRepository = Depends(UserRepository)
-    ):
+    def __init__(self, user_repository: UserRepository = Depends(UserRepository)):
         self.user_repository = user_repository
 
     async def create_new_user(self, user_data: UserCreate) -> ShowUser:
@@ -21,10 +19,8 @@ class UserService:
         This function checks if a user with the specified email already exists."""
 
         # Check if a user with the specified username already exists.
-        existing_user_by_username = (
-            await self.user_repository.get_user_by_username(
-                username=user_data.username
-            )
+        existing_user_by_username = await self.user_repository.get_user_by_username(
+            username=user_data.username
         )
         if existing_user_by_username:
             raise ValueError('Username already registered')
