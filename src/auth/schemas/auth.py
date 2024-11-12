@@ -8,3 +8,12 @@ class GoogleAuthRequestSchema(BaseModel):
 
 class GoogleLoginResponse(BaseModel):
     url: HttpUrl
+
+
+class TokenRefreshRequest(BaseModel):
+    refresh_token: str
+
+
+class TokenRefreshResponse(BaseModel):
+    access_token: str
+    refresh_token: str
