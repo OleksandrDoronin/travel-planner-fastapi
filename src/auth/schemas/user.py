@@ -1,8 +1,8 @@
 import re
 import uuid
+from typing import Optional
 
-from pydantic import BaseModel, EmailStr, Field, field_validator
-
+from pydantic import BaseModel, EmailStr, Field, field_validator, ConfigDict
 
 PHONE_NUMBER_PATTERN = re.compile(r'^\+?[1-9]\d{1,14}$')
 LETTER_MATCH_PATTERN = re.compile(r'^[а-яА-Яa-zA-Z\-]+$')
@@ -62,3 +62,40 @@ class UserCreate(BaseModel):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+
+class SocialAccount(BaseModel):
+    id: Optional[int] = None
+    service: str
+    social_account_id: str
+    access_token: str
+    refresh_token: str
+    user_id: int
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class SocialAccountResponse(BaseModel):
+    service: str
+    social_account_id: str
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class User(BaseModel):
+    id: Optional[int] = None
+    full_name: str
+    username: Optional[str] = None
+    email: EmailStr
+    avatar: Optional[str]
+    is_staff: bool = False
+    is_active: bool = True
+    is_pass_tutorial: bool = False
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserResponse(User):
+    social_accounts: list[SocialAccountResponse] = []
+
+    model_config = ConfigDict(from_attributes=True)
