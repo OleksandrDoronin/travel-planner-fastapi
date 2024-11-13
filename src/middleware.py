@@ -1,8 +1,7 @@
+from config import get_settings
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from starlette.middleware.sessions import SessionMiddleware
-
-from src.config import get_settings
 
 
 settings = get_settings()

@@ -1,9 +1,8 @@
 from typing import Annotated
 
+from auth.dependencies import get_cypher
 from cryptography.fernet import Fernet
 from fastapi.params import Depends
-
-from src.auth.dependencies import get_cypher
 
 
 class Encoder:

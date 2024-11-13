@@ -1,9 +1,9 @@
-from src.auth.schemas.user import SocialAccount, User
-from src.auth.services.encoder import Encoder
+from auth.schemas.user_schemas import SocialAccountLink, UserBase
+from auth.services.encoder import Encoder
 
 
-def map_to_user(user: dict) -> User:
-    return User(
+def map_to_user(user: dict) -> UserBase:
+    return UserBase(
         email=user['email'],
         full_name=user['name'],
         avatar=user['picture'],
@@ -13,8 +13,8 @@ def map_to_user(user: dict) -> User:
 
 def map_and_encode_tokens(
     service: str, social_account_id: str, tokens: dict, user_id: int, encryptor: Encoder
-) -> SocialAccount:
-    return SocialAccount(
+) -> SocialAccountLink:
+    return SocialAccountLink(
         service=service,
         social_account_id=social_account_id,
         access_token=encryptor.encode(tokens['access_token']),

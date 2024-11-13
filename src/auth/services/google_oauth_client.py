@@ -2,9 +2,8 @@ import logging
 from typing import Annotated
 
 import httpx
+from config import Settings, get_settings
 from fastapi import Depends
-
-from src.config import Settings, get_settings
 
 
 logger = logging.getLogger(__name__)
@@ -16,40 +15,48 @@ class GoogleOAuthClient:
 
     async def fetch_token(self, code: str, redirect_uri: str) -> dict:
         """Fetches Google OAuth token using an authorization code."""
-        try:
-            async with httpx.AsyncClient() as client:
-                payload = {
-                    'code': code,
-                    'client_id': self.settings.SOCIAL_AUTH_GOOGLE_OAUTH2_KEY,
-                    'client_secret': self.settings.SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET,
-                    'redirect_uri': redirect_uri,
-                    'grant_type': 'authorization_code',
-                }
-                response = await client.post(
-                    self.settings.GOOGLE_TOKEN_URL, data=payload
-                )
-                response.raise_for_status()
-                return response.json()
-        except httpx.HTTPStatusError as e:
-            logger.error(f'HTTP error occurred while fetching token: {repr(e)}')
-            raise ValueError('Failed to fetch token from Google')
-        except Exception as e:
-            logger.error(f'Failed to fetch token from Google: {repr(e)}')
-            raise ValueError('Failed to fetch token from Google')
+        payload = {
+            'code': code,
+            'client_id': self.settings.GOOGLE_OAUTH_KEY,
+            'client_secret': self.settings.GOOGLE_OAUTH_SECRET,
+            'redirect_uri': redirect_uri,
+            'grant_type': 'authorization_code',
+        }
+        return await self._post_request(self.settings.GOOGLE_TOKEN_URL, data=payload)
+
+    async def fetch_user_info(self, access_token: str) -> dict:
+        """Fetches user info using the access token."""
+        params = {'access_token': access_token}
+        return await self._get_request(self.settings.GOOGLE_USERINFO_URL, params=params)
 
     @staticmethod
-    async def fetch_user_info(self, access_token: str) -> dict:
+    async def _post_request(url: str, data: dict) -> dict:
         try:
-            async with httpx.AsyncClient() as client:
-                params = {'access_token': access_token}
-                response = await client.get(
-                    self.settings.GOOGLE_USERINFO_URL, params=params
-                )
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.post(url, data=data)
                 response.raise_for_status()
                 return response.json()
         except httpx.HTTPStatusError as e:
-            logger.error(f'HTTP error occurred while fetching user info: {repr(e)}')
-            raise ValueError('Error fetching user info')
+            logger.error(
+                f'HTTP error {e.response.status_code} when accessing {url}: {repr(e)}'
+            )
+            raise ValueError(f'Failed to fetch data from {url}')
         except Exception as e:
-            logger.error(f'Failed to fetch user info from Google: {repr(e)}')
-            raise ValueError('Error fetching user info')
+            logger.error(f'Unexpected error fetching data from {url}: {repr(e)}')
+            raise ValueError('Unexpected error occurred')
+
+    @staticmethod
+    async def _get_request(url: str, params: dict) -> dict:
+        try:
+            async with httpx.AsyncClient(timeout=10) as client:
+                response = await client.get(url, params=params)
+                response.raise_for_status()
+                return response.json()
+        except httpx.HTTPStatusError as e:
+            logger.error(
+                f'HTTP error {e.response.status_code} when accessing {url}: {repr(e)}'
+            )
+            raise ValueError(f'Failed to fetch data from {url}')
+        except Exception as e:
+            logger.error(f'Unexpected error fetching data from {url}: {repr(e)}')
+            raise ValueError('Unexpected error occurred')

@@ -1,8 +1,7 @@
 from functools import lru_cache
 
+from config import get_settings
 from cryptography.fernet import Fernet
-
-from src.config import get_settings
 
 
 settings = get_settings()

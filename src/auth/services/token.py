@@ -2,10 +2,9 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
 
+from config import Settings, get_settings
 from fastapi import Depends
 from jose import JWTError, jwt
-
-from src.config import Settings, get_settings
 
 
 logger = logging.getLogger(__name__)

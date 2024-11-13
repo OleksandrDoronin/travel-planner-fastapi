@@ -1,15 +1,14 @@
 import logging
 from typing import Annotated
 
+from auth.schemas.auth_schemas import GoogleLoginResponse
+from auth.services.google_oauth_url_generator import (
+    GoogleOAuthUrlGenerator,
+)
+from auth.utils import generate_random_state
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import HttpUrl
 from starlette import status
-
-from src.auth.schemas.auth import GoogleLoginResponse
-from src.auth.services.google_oauth_url_generator import (
-    GoogleOAuthUrlGenerator,
-)
-from src.auth.utils import generate_random_state
 
 
 router = APIRouter(tags=['auth'], prefix='/auth')

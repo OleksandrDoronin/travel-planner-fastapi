@@ -1,4 +1,5 @@
-from pydantic import BaseModel, HttpUrl
+from auth.schemas.user_schemas import UserResponse
+from pydantic import BaseModel, ConfigDict, HttpUrl
 
 
 class GoogleAuthRequestSchema(BaseModel):
@@ -8,6 +9,14 @@ class GoogleAuthRequestSchema(BaseModel):
 
 class GoogleLoginResponse(BaseModel):
     url: HttpUrl
+
+
+class GoogleCallBackResponse(BaseModel):
+    user: UserResponse
+    access_token: str
+    refresh_token: str
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TokenRefreshRequest(BaseModel):
