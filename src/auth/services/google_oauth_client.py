@@ -2,8 +2,8 @@ import logging
 from typing import Annotated
 
 import httpx
-from config import Settings, get_settings
 from fastapi import Depends
+from settings import Settings, get_settings
 
 
 logger = logging.getLogger(__name__)
@@ -22,12 +22,16 @@ class GoogleOAuthClient:
             'redirect_uri': redirect_uri,
             'grant_type': 'authorization_code',
         }
-        return await self._post_request(self.settings.GOOGLE_TOKEN_URL, data=payload)
+        return await self._post_request(
+            url=self.settings.GOOGLE_TOKEN_URL, data=payload
+        )
 
     async def fetch_user_info(self, access_token: str) -> dict:
         """Fetches user info using the access token."""
         params = {'access_token': access_token}
-        return await self._get_request(self.settings.GOOGLE_USERINFO_URL, params=params)
+        return await self._get_request(
+            url=self.settings.GOOGLE_USERINFO_URL, params=params
+        )
 
     @staticmethod
     async def _post_request(url: str, data: dict) -> dict:

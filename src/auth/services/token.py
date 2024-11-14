@@ -2,9 +2,9 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
 
-from config import Settings, get_settings
 from fastapi import Depends
 from jose import JWTError, jwt
+from settings import Settings, get_settings
 
 
 logger = logging.getLogger(__name__)
@@ -14,7 +14,7 @@ class TokenService:
     def __init__(self, settings: Annotated[Settings, Depends(get_settings)]):
         self.settings = settings
 
-    def create_access_token(
+    async def create_access_token(
         self, user_id: int, expires_delta: Optional[timedelta] = None
     ) -> str:
         """Creates a new access token."""
@@ -30,7 +30,7 @@ class TokenService:
         )
         return access_token
 
-    def create_refresh_token(self, user_id: int) -> str:
+    async def create_refresh_token(self, user_id: int) -> str:
         """Creates a new refresh token."""
         to_encode = {'sub': str(user_id)}
         expire = datetime.now(timezone.utc) + timedelta(

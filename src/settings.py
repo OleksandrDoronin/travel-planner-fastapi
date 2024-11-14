@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE: int
     REFRESH_TOKEN_EXPIRE: int
     ENCRYPTION_KEY: str
+    JWT_SECRET_KEY: str
 
     # Google OAuth settings
     GOOGLE_OAUTH_KEY: str

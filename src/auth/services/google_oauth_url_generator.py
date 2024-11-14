@@ -3,8 +3,8 @@ from typing import Annotated
 from urllib.parse import urlencode, urlunparse
 
 from auth.schemas.auth_schemas import GoogleAuthRequestSchema, GoogleLoginResponse
-from config import Settings, get_settings
 from fastapi import Depends
+from settings import Settings, get_settings
 
 
 logger = logging.getLogger(__name__)
@@ -20,7 +20,9 @@ class GoogleOAuthUrlGenerator:
             google_auth_request = GoogleAuthRequestSchema(
                 redirect_uri=redirect_uri, state=state
             )
-            query_params = self._generate_query_params(google_auth_request)
+            query_params = self._generate_query_params(
+                google_auth_request=google_auth_request
+            )
             google_auth_url = urlunparse(
                 (
                     'https',

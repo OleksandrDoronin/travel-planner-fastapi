@@ -6,8 +6,7 @@ def map_to_user(user: dict) -> UserBase:
     return UserBase(
         email=user['email'],
         full_name=user['name'],
-        avatar=user['picture'],
-        username=user['email'].split('@')[0],
+        profile_picture=user['picture'],
     )
 
 

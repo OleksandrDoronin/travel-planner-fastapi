@@ -3,13 +3,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, EmailStr
 
 
-class BaseModelWithConfig(BaseModel):
-    """Base model class that includes common configuration for all models."""
-
-    model_config = ConfigDict(from_attributes=True)
-
-
-class SocialAccountLink(BaseModelWithConfig):
+class SocialAccountLink(BaseModel):
     """Model for a linked social account."""
 
     id: Optional[int] = None
@@ -18,25 +12,27 @@ class SocialAccountLink(BaseModelWithConfig):
     access_token: str
     refresh_token: str
     user_id: int
+    model_config = ConfigDict(from_attributes=True)
 
 
-class SocialAccountResponse(BaseModelWithConfig):
+class SocialAccountResponse(BaseModel):
     """Response model for a linked social account."""
 
     service: str
     social_account_id: str
+    model_config = ConfigDict(from_attributes=True)
 
 
-class UserBase(BaseModelWithConfig):
+class UserBase(BaseModel):
     """Base model for user data, to be used in various responses."""
 
+    id: Optional[int] = None
     full_name: str
-    username: Optional[str] = None
     email: EmailStr
-    avatar: Optional[str]
-    is_staff: bool = False
+    profile_picture: Optional[str]
     is_active: bool = True
-    is_pass_tutorial: bool = False
+
+    model_config = ConfigDict(from_attributes=True)
 
 
 class UserResponse(UserBase):

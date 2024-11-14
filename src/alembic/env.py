@@ -1,3 +1,6 @@
+import os
+import sys
+print(sys.path)
 import asyncio
 from logging.config import fileConfig
 
@@ -6,9 +9,12 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from config import get_settings
-from models import User, SocialAccount  # noqa
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), './src')))
 from database import Base
+from models import User, SocialAccount  # noqa
+
+from settings import get_settings
+
 
 settings = get_settings()
 config = context.config
