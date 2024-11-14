@@ -1,59 +1,39 @@
-from typing import Optional
-from uuid import UUID
+from typing import Annotated, Optional
 
+from auth.schemas.user_schemas import UserBase
 from database import get_db
 from fastapi import Depends
-from models.users import User
+from models import User
 from sqlalchemy import select
-from sqlalchemy.exc import NoResultFound
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import joinedload
 
 
 class UserRepository:
-    def __init__(self, db: AsyncSession = Depends(get_db)):
-        self.db_session = db
+    def __init__(self, db_session: Annotated[AsyncSession, Depends(get_db)]):
+        self.db_session = db_session
 
-    async def add_user_to_db(self, user: User) -> User:
-        """Adds a new user to the database."""
-        self.db_session.add(user)
-        await self.db_session.flush()
-        return user
-
-    async def delete_user(self, user_id: UUID) -> None:
-        """Delete a user from db"""
-        query = select(User).where(User.id == user_id)
-        result = await self.db_session.execute(query)
+    async def get_user(self, **filters) -> Optional[UserBase]:
+        """Get a user by given filters (e.g., email or id)."""
+        stmt = (
+            select(User).options(joinedload(User.social_accounts)).filter_by(**filters)
+        )
+        result = await self.db_session.execute(stmt)
         user = result.scalars().first()
+        return UserBase.model_validate(user) if user else None
 
-        if user is None:
-            raise NoResultFound(f'User with ID {user_id} not found')
+    async def get_user_by_email(self, email: str) -> Optional[UserBase]:
+        """Get a user by email, using indexed field."""
+        return await self.get_user(email=email)
 
-        await self.db_session.delete(user)
+    async def get_user_by_id(self, user_id: int) -> Optional[UserBase]:
+        """Get a user by ID, using indexed field."""
+        return await self.get_user(id=user_id)
+
+    async def create_user(self, user: UserBase) -> UserBase:
+        """Create a new user."""
+        user_data = User(**user.model_dump())
+        self.db_session.add(user_data)
         await self.db_session.commit()
-
-    async def get_user_by_username(self, username: str) -> Optional[User]:
-        """
-        Retrieve a user from the database by their username.
-        """
-        query = select(User).where(User.username == username)  # Construct the query
-        result = await self.db_session.execute(query)  # Execute the query
-        user = result.scalars().first()  # Retrieve the first user from the result
-        return user
-
-    async def get_user_by_id(self, user_id: UUID) -> Optional[User]:
-        """
-        Retrieve a user from the database by their ID.
-        """
-        query = select(User).where(User.id == user_id)  # Construct the query
-        result = await self.db_session.execute(query)  # Execute the query
-        user = result.scalars().first()  # Retrieve the first user from the result
-        return user
-
-    async def get_user_by_email(self, email: str) -> Optional[User]:
-        """
-        Retrieve a user the database by their email
-        """
-        query = select(User).where(User.email == email)  # Construct the query
-        result = await self.db_session.execute(query)  # Execute the query
-        user = result.scalars().first()  # Retrieve the first user from the result
-        return user
+        await self.db_session.refresh(user_data)
+        return UserBase.model_validate(user_data)
