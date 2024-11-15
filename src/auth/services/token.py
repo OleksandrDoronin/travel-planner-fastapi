@@ -42,6 +42,12 @@ class TokenService:
         )
         return refresh_token
 
+    async def get_user_id_from_refresh_token(self, refresh_token: str) -> int:
+        """Extracts user_id from the refresh token if valid."""
+        payload = await self.validate_refresh_token(refresh_token=refresh_token)
+        user_id = payload['sub']
+        return int(user_id)
+
     async def validate_refresh_token(self, refresh_token: str) -> dict:
         """Validates the refresh token and returns the payload if valid."""
         try:
