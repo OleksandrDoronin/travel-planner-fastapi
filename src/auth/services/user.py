@@ -3,7 +3,7 @@ from typing import Annotated
 
 from auth.repositories.social_account import SocialAccountRepository
 from auth.repositories.user import UserRepository
-from auth.schemas.user_schemas import UserResponse
+from auth.schemas.user_schemas import ShowUser
 from fastapi import Depends
 
 
@@ -21,7 +21,7 @@ class UserService:
         self.user_repository = user_repository
         self.social_repository = social_repository
 
-    async def get_user_by_id(self, user_id: int) -> UserResponse:
+    async def get_user_by_id(self, user_id: int) -> ShowUser:
         try:
             user = await self.user_repository.get_user_by_id(user_id=user_id)
 
@@ -37,8 +37,6 @@ class UserService:
             logger.error(f'Database error: {str(e)}')
             raise
 
-        user_response = UserResponse(
-            **user.model_dump(), social_accounts=social_accounts
-        )
+        user_response = ShowUser(**user.model_dump(), social_accounts=social_accounts)
 
         return user_response
