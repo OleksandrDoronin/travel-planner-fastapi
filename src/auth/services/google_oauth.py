@@ -12,8 +12,7 @@ from auth.services.token import TokenService
 from fastapi import Depends
 
 
-logging.basicConfig(level=logging.DEBUG)
-logger = logging.getLogger()
+logger = logging.getLogger('travel_planner_app')
 
 
 class GoogleAuthService:

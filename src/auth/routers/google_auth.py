@@ -14,7 +14,7 @@ from starlette import status
 
 
 router = APIRouter(tags=['auth'], prefix='/auth')
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('travel_planner_app')
 settings = get_settings()
 
 

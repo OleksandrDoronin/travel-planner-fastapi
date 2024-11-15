@@ -7,7 +7,7 @@ from fastapi import Depends
 from settings import Settings, get_settings
 
 
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('travel_planner_app')
 
 
 class GoogleOAuthUrlGenerator:
