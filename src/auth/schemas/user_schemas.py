@@ -40,3 +40,8 @@ class UserResponse(UserBase):
 
     id: Optional[int] = None
     social_accounts: list[SocialAccountResponse] = []
+
+
+class ShowUser(UserResponse):
+    bio: Optional[str] = None
+    gender: Optional[str] = None
