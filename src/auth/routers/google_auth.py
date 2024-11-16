@@ -1,13 +1,20 @@
 import logging
 from typing import Annotated
 
-from auth.schemas.auth_schemas import GoogleCallBackResponse, GoogleLoginResponse
+from auth.schemas.auth_schemas import (
+    GoogleCallBackResponse,
+    GoogleLoginResponse,
+    TokenRefreshRequest,
+    TokenRefreshResponse,
+)
+from auth.security import get_current_user
 from auth.services.google_oauth import GoogleAuthService
 from auth.services.google_oauth_url_generator import (
     GoogleOAuthUrlGenerator,
 )
-from auth.utils import generate_random_state
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from auth.services.token import TokenService
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+from jose import JWTError
 from pydantic import HttpUrl
 from settings import get_settings
 from starlette import status
@@ -30,13 +37,14 @@ async def google_login(
     ],
     redirect_uri: HttpUrl = Query(..., alias='redirect_uri'),
 ) -> GoogleLoginResponse:
+    """Generate Google OAuth URL and return it along with state."""
+
     try:
-        state = generate_random_state()
-        request.session['state'] = state
-        google_auth_url = google_oauth_url_generator.get_google_auth_url(
-            redirect_uri=redirect_uri, state=state
+        google_auth_response, state = google_oauth_url_generator.generate_auth_url(
+            redirect_uri=redirect_uri
         )
-        return google_auth_url
+        request.session['state'] = state
+        return google_auth_response
 
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -67,7 +75,6 @@ async def google_callback(
 
     # Retrieve session state for CSRF protection
     session_state = request.session.get('state')
-    logger.info('Received Google callback with parameters: state=%s', session_state)
 
     try:
         # Pass the received parameters to the service for processing
@@ -87,6 +94,51 @@ async def google_callback(
         )
 
 
-@router.post('/logout')
-async def logout():
-    pass
+@router.post(
+    '/logout',
+    dependencies=[Depends(get_current_user)],
+    status_code=status.HTTP_200_OK,
+    summary='Logout the user and blacklist the token',
+)
+async def logout(
+    token_refresh_request: Annotated[TokenRefreshRequest, Body(...)],
+    token_service: Annotated[TokenService, Depends(TokenService)],
+) -> dict[str, str]:
+    """Logs out the user by blacklisting the provided refresh token."""
+
+    try:
+        token_service.validate_refresh_token(
+            refresh_token=token_refresh_request.refresh_token
+        )
+        await token_service.blacklist_token(token=token_refresh_request.refresh_token)
+        return {'detail': 'Successfully logged out.'}
+    except JWTError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.post(
+    '/token/refresh',
+    response_model=TokenRefreshResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary='Refresh the access token',
+)
+async def refresh_token(
+    token_refresh_request: Annotated[TokenRefreshRequest, Body(...)],
+    token_service: Annotated[TokenService, Depends(TokenService)],
+) -> TokenRefreshResponse:
+    """Refreshes access and refresh tokens by invalidating the old refresh token."""
+
+    try:
+        tokens = await token_service.refresh_token_and_blacklist(
+            refresh_token=token_refresh_request.refresh_token
+        )
+        return tokens
+
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except JWTError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )

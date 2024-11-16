@@ -1,3 +1,6 @@
+from datetime import datetime
+
+from auth.schemas.auth_schemas import TokenBlacklistSchema
 from auth.schemas.user_schemas import SocialAccountLink, UserBase
 from auth.services.encoder import Encoder
 
@@ -20,3 +23,7 @@ def map_and_encode_tokens(
         refresh_token=encryptor.encode(tokens['refresh_token']),
         user_id=user_id,
     )
+
+
+def map_refresh_token(token: str, expires_at: datetime) -> TokenBlacklistSchema:
+    return TokenBlacklistSchema(token=token, expires_at=expires_at)

@@ -20,13 +20,23 @@ async def get_current_user(
     user_service: Annotated[UserService, Depends(UserService)],
     credentials: HTTPAuthorizationCredentials = Security(http_bearer),
 ) -> UserBase:
+    """
+    Gets the current user based on the authorization token.
+
+    Checks if the token is on a blacklist, extracts the user ID from the token
+    and returns information about the user.
+    """
+
     token = credentials.credentials
+
+    if await token_service.is_token_blacklisted(token=token):
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token'
+        )
 
     try:
         # Extract the user ID from the token using the TokenService
-        user_id = await token_service.get_user_id_from_refresh_token(
-            refresh_token=token
-        )
+        user_id = token_service.get_user_id_from_refresh_token(refresh_token=token)
 
         # Extract the user ID from the token using the TokenService
         user = await user_service.get_user_by_id(user_id=user_id)

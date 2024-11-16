@@ -43,5 +43,7 @@ class UserResponse(UserBase):
 
 
 class ShowUser(UserResponse):
+    """Extended user response model that includes additional fields."""
+
     bio: Optional[str] = None
     gender: Optional[str] = None
