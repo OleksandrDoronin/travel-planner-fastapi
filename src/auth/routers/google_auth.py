@@ -5,6 +5,7 @@ from auth.schemas.auth_schemas import (
     GoogleCallBackResponse,
     GoogleLoginResponse,
     TokenRefreshRequest,
+    TokenRefreshResponse,
 )
 from auth.security import get_current_user
 from auth.services.google_oauth import GoogleAuthService
@@ -103,6 +104,8 @@ async def logout(
     token_refresh_request: Annotated[TokenRefreshRequest, Body(...)],
     token_service: Annotated[TokenService, Depends(TokenService)],
 ) -> dict[str, str]:
+    """Logs out the user by blacklisting the provided refresh token."""
+
     try:
         token_service.validate_refresh_token(
             refresh_token=token_refresh_request.refresh_token
@@ -111,3 +114,31 @@ async def logout(
         return {'detail': 'Successfully logged out.'}
     except JWTError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+
+
+@router.post(
+    '/token/refresh',
+    response_model=TokenRefreshResponse,
+    status_code=status.HTTP_201_CREATED,
+    summary='Refresh the access token',
+)
+async def refresh_token(
+    token_refresh_request: Annotated[TokenRefreshRequest, Body(...)],
+    token_service: Annotated[TokenService, Depends(TokenService)],
+) -> TokenRefreshResponse:
+    """Refreshes access and refresh tokens by invalidating the old refresh token."""
+
+    try:
+        tokens = await token_service.refresh_token_and_blacklist(
+            refresh_token=token_refresh_request.refresh_token
+        )
+        return tokens
+
+    except ValueError as e:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except JWTError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )

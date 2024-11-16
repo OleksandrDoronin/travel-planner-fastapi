@@ -4,6 +4,8 @@ from typing import Annotated, Optional
 
 from auth.mapper import map_refresh_token
 from auth.repositories.token_blacklist import TokenBlacklistRepository
+from auth.repositories.user import UserRepository
+from auth.schemas.auth_schemas import TokenRefreshResponse
 from fastapi import Depends
 from jose import JWTError, jwt
 from settings import Settings, get_settings
@@ -19,9 +21,11 @@ class TokenService:
         token_repository: Annotated[
             TokenBlacklistRepository, Depends(TokenBlacklistRepository)
         ],
+        user_repository: Annotated[UserRepository, Depends(UserRepository)],
     ):
         self.settings = settings
         self.token_repository = token_repository
+        self.user_repository = user_repository
 
     def create_access_token(
         self, user_id: int, expires_delta: Optional[timedelta] = None
@@ -108,3 +112,33 @@ class TokenService:
     async def is_token_blacklisted(self, token: str) -> bool:
         """Checks if the token is on the blacklist."""
         return await self.token_repository.is_token_blacklisted(token=token)
+
+    async def refresh_token_and_blacklist(
+        self, refresh_token: str
+    ) -> TokenRefreshResponse:
+        """
+        Refreshes the access token and adds the old refresh token to the blacklist.
+        """
+
+        # Check if the provided refresh token is already blacklisted
+        if await self.token_repository.is_token_blacklisted(token=refresh_token):
+            raise JWTError('Invalid token')
+
+        user_id = self.get_user_id_from_refresh_token(refresh_token=refresh_token)
+        try:
+            user = await self.user_repository.get_user_by_id(user_id=user_id)
+            if not user:
+                raise ValueError('User not found')
+            new_access_token = self.create_access_token(user_id=user.id)
+            new_refresh_token = self.create_refresh_token(user_id=user.id)
+
+            # Add the old refresh token to the blacklist
+            await self.blacklist_token(token=refresh_token)
+
+            return TokenRefreshResponse(
+                access_token=new_access_token, refresh_token=new_refresh_token
+            )
+
+        except Exception as e:
+            logger.error('Unexpected error retrieving user: %s', repr(e))
+            raise ValueError('An unexpected error occurred while retrieving user')

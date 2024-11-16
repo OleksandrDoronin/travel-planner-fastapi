@@ -22,6 +22,8 @@ class TokenBlacklistRepository:
         await self.db_session.commit()
 
     async def is_token_blacklisted(self, token: str) -> Optional[bool]:
+        """Checks if the given token is blacklisted."""
+
         result = await self.db_session.execute(
             select(TokenBlacklist).where(TokenBlacklist.token == token)
         )
