@@ -6,7 +6,6 @@ from auth.services.google_oauth import GoogleAuthService
 from auth.services.google_oauth_url_generator import (
     GoogleOAuthUrlGenerator,
 )
-from auth.utils import generate_random_state
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import HttpUrl
 from settings import get_settings
@@ -30,13 +29,14 @@ async def google_login(
     ],
     redirect_uri: HttpUrl = Query(..., alias='redirect_uri'),
 ) -> GoogleLoginResponse:
+    """Generate Google OAuth URL and return it along with state."""
+
     try:
-        state = generate_random_state()
-        request.session['state'] = state
-        google_auth_url = google_oauth_url_generator.get_google_auth_url(
-            redirect_uri=redirect_uri, state=state
+        google_auth_response, state = google_oauth_url_generator.generate_auth_url(
+            redirect_uri
         )
-        return google_auth_url
+        request.session['state'] = state
+        return google_auth_response
 
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
@@ -67,7 +67,6 @@ async def google_callback(
 
     # Retrieve session state for CSRF protection
     session_state = request.session.get('state')
-    logger.info('Received Google callback with parameters: state=%s', session_state)
 
     try:
         # Pass the received parameters to the service for processing
