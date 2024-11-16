@@ -24,9 +24,7 @@ async def get_current_user(
 
     try:
         # Extract the user ID from the token using the TokenService
-        user_id = await token_service.get_user_id_from_refresh_token(
-            refresh_token=token
-        )
+        user_id = token_service.get_user_id_from_refresh_token(refresh_token=token)
 
         # Extract the user ID from the token using the TokenService
         user = await user_service.get_user_by_id(user_id=user_id)

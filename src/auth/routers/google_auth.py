@@ -1,12 +1,19 @@
 import logging
 from typing import Annotated
 
-from auth.schemas.auth_schemas import GoogleCallBackResponse, GoogleLoginResponse
+from auth.schemas.auth_schemas import (
+    GoogleCallBackResponse,
+    GoogleLoginResponse,
+    TokenRefreshRequest,
+)
+from auth.security import get_current_user
 from auth.services.google_oauth import GoogleAuthService
 from auth.services.google_oauth_url_generator import (
     GoogleOAuthUrlGenerator,
 )
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from auth.services.token import TokenService
+from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+from jose import JWTError
 from pydantic import HttpUrl
 from settings import get_settings
 from starlette import status
@@ -33,7 +40,7 @@ async def google_login(
 
     try:
         google_auth_response, state = google_oauth_url_generator.generate_auth_url(
-            redirect_uri
+            redirect_uri=redirect_uri
         )
         request.session['state'] = state
         return google_auth_response
@@ -86,6 +93,21 @@ async def google_callback(
         )
 
 
-@router.post('/logout')
-async def logout():
-    pass
+@router.post(
+    '/logout',
+    dependencies=[Depends(get_current_user)],
+    status_code=status.HTTP_200_OK,
+    summary='Logout the user and blacklist the token',
+)
+async def logout(
+    token_refresh_request: Annotated[TokenRefreshRequest, Body(...)],
+    token_service: Annotated[TokenService, Depends(TokenService)],
+) -> dict[str, str]:
+    try:
+        token_service.validate_refresh_token(
+            refresh_token=token_refresh_request.refresh_token
+        )
+        await token_service.blacklist_token(token=token_refresh_request.refresh_token)
+        return {'detail': 'Successfully logged out.'}
+    except JWTError as e:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))

@@ -148,8 +148,8 @@ class GoogleAuthService:
         social_accounts = await self.social_repository.get_social_accounts_for_user(
             user_id=user.id
         )
-        access_token = await self.token_service.create_access_token(user_id=user.id)
-        refresh_token = await self.token_service.create_refresh_token(user_id=user.id)
+        access_token = self.token_service.create_access_token(user_id=user.id)
+        refresh_token = self.token_service.create_refresh_token(user_id=user.id)
 
         user_response = UserResponse(
             **user.model_dump(),

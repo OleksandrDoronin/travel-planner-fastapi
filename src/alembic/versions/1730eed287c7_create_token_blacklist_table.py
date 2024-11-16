@@ -1,8 +1,8 @@
 """create token blacklist table
 
-Revision ID: e1c4b7c2742a
+Revision ID: 1730eed287c7
 Revises: 5ea60ccd7962
-Create Date: 2024-11-16 10:51:31.701651
+Create Date: 2024-11-16 14:18:09.265439
 
 """
 from typing import Sequence, Union
@@ -12,7 +12,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = 'e1c4b7c2742a'
+revision: str = '1730eed287c7'
 down_revision: Union[str, None] = '5ea60ccd7962'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,7 +25,7 @@ def upgrade() -> None:
     sa.Column('token', sa.String(), nullable=False),
     sa.Column('blacklisted_at', sa.DateTime(timezone=True), server_default=sa.text('(CURRENT_TIMESTAMP)'), nullable=False),
     sa.Column('expires_at', sa.DateTime(), nullable=False),
-    sa.PrimaryKeyConstraint('id', 'token')
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_token_blacklist_id'), 'token_blacklist', ['id'], unique=False)
     op.create_index(op.f('ix_token_blacklist_token'), 'token_blacklist', ['token'], unique=False)
