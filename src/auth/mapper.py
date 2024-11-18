@@ -2,7 +2,8 @@ from datetime import datetime
 
 from auth.schemas.auth_schemas import TokenBlacklistSchema
 from auth.schemas.user_schemas import SocialAccountLink, UserBase
-from auth.services.encoder import Encoder
+from auth.utils import encode_token
+from cryptography.fernet import Fernet
 
 
 def map_to_user(user: dict) -> UserBase:
@@ -14,13 +15,13 @@ def map_to_user(user: dict) -> UserBase:
 
 
 def map_and_encode_tokens(
-    service: str, social_account_id: str, tokens: dict, user_id: int, encryptor: Encoder
+    service: str, social_account_id: str, tokens: dict, user_id: int, encryptor: Fernet
 ) -> SocialAccountLink:
     return SocialAccountLink(
         service=service,
         social_account_id=social_account_id,
-        access_token=encryptor.encode(tokens['access_token']),
-        refresh_token=encryptor.encode(tokens['refresh_token']),
+        access_token=encode_token(tokens['access_token'], encryptor),
+        refresh_token=encode_token(tokens['refresh_token'], encryptor),
         user_id=user_id,
     )
 

@@ -8,8 +8,8 @@ from auth.schemas.auth_schemas import (
     TokenRefreshResponse,
 )
 from auth.security import get_current_user
-from auth.services.google_oauth import GoogleAuthService
-from auth.services.google_oauth_url_generator import (
+from auth.services.google_oauth import (
+    GoogleAuthService,
     GoogleOAuthUrlGenerator,
 )
 from auth.services.token import TokenService
