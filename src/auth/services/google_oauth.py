@@ -1,15 +1,23 @@
 import logging
 from typing import Annotated
+from urllib.parse import urlencode, urlunparse
 
+from auth.dependencies import get_cypher
 from auth.mapper import map_and_encode_tokens, map_to_user
+from auth.repositories.google_oauth import GoogleOAuthRepository
 from auth.repositories.social_account import SocialAccountRepository
 from auth.repositories.user import UserRepository
-from auth.schemas.auth_schemas import GoogleCallBackResponse
+from auth.schemas.auth_schemas import (
+    GoogleAuthRequestSchema,
+    GoogleCallBackResponse,
+    GoogleLoginResponse,
+)
 from auth.schemas.user_schemas import SocialAccountLink, UserBase, UserResponse
-from auth.services.encoder import Encoder
-from auth.services.google_oauth_client import GoogleOAuthClient
 from auth.services.token import TokenService
+from auth.utils import generate_random_state
+from cryptography.fernet import Fernet
 from fastapi import Depends
+from settings import Settings, get_settings
 
 
 logger = logging.getLogger('travel_planner_app')
@@ -27,15 +35,17 @@ class GoogleAuthService:
             SocialAccountRepository, Depends(SocialAccountRepository)
         ],
         token_service: Annotated[TokenService, Depends(TokenService)],
-        google_oauth_client: Annotated[GoogleOAuthClient, Depends(GoogleOAuthClient)],
-        encoder: Annotated[Encoder, Depends(Encoder)],
+        google_oauth_repo: Annotated[
+            GoogleOAuthRepository, Depends(GoogleOAuthRepository)
+        ],
+        cypher: Annotated[Fernet, Depends(get_cypher)],
     ):
         self._service = 'google'
         self.user_repository = user_repository
         self.social_repository = social_repository
-        self.google_oauth_client = google_oauth_client
+        self.google_oauth_repo = google_oauth_repo
         self.token_service = token_service
-        self.encoder = encoder
+        self.cypher = cypher
 
     async def handle_google_callback(
         self, code: str, redirect_uri: str, state: str, session_state: str
@@ -45,8 +55,10 @@ class GoogleAuthService:
         and connects the account.
         """
 
-        if not code:
-            raise ValueError('Authorization code is required.')
+        if not code or not redirect_uri or not state:
+            raise ValueError(
+                'Authorization code, redirect URI, and state are required.'
+            )
 
         if session_state != state:
             raise ValueError('Invalid state parameter.')
@@ -117,7 +129,7 @@ class GoogleAuthService:
         """
         Fetches Google OAuth tokens using the provided authorization code.
         """
-        return await self.google_oauth_client.fetch_token(
+        return await self.google_oauth_repo.fetch_token(
             code=code, redirect_uri=redirect_uri
         )
 
@@ -125,18 +137,21 @@ class GoogleAuthService:
         """
         Fetches user information from Google using the provided access token.
         """
-        return await self.google_oauth_client.fetch_user_info(access_token=access_token)
+        return await self.google_oauth_repo.fetch_user_info(access_token=access_token)
 
     def _map_social_account(self, user_info, token_data, user_id):
         """
         Maps the Google user info and tokens to a social account object.
         """
+        if 'id' not in user_info:
+            raise ValueError('Missing "id" in user info from Google.')
+
         return map_and_encode_tokens(
             service=self._service,
             social_account_id=user_info['id'],
             tokens=token_data,
             user_id=user_id,
-            encryptor=self.encoder,
+            encryptor=self.cypher,
         )
 
     async def _prepare_callback_response(
@@ -160,3 +175,56 @@ class GoogleAuthService:
             access_token=access_token,
             refresh_token=refresh_token,
         )
+
+
+class GoogleOAuthUrlGenerator:
+    def __init__(self, settings: Annotated[Settings, Depends(get_settings)]):
+        self.settings = settings
+
+    def generate_auth_url(self, redirect_uri: str) -> tuple[GoogleLoginResponse, str]:
+        """Generate the Google OAuth URL and manage the state."""
+        try:
+            state = self._generate_state()
+            google_auth_url = self._get_google_auth_url(redirect_uri, state)
+            return GoogleLoginResponse(url=google_auth_url), state
+        except ValueError as e:
+            logger.error(f'Error generating Google OAuth URL: {repr(e)}')
+            raise ValueError('Failed to generate Google OAuth URL')
+
+    @staticmethod
+    def _generate_state() -> str:
+        """Generate a random state string."""
+        return generate_random_state()
+
+    def _get_google_auth_url(self, redirect_uri: str, state: str) -> str:
+        """Helper to generate the Google OAuth URL."""
+        google_auth_request = GoogleAuthRequestSchema(
+            redirect_uri=redirect_uri, state=state
+        )
+
+        query_params = self._generate_query_params(google_auth_request)
+
+        return urlunparse(
+            (
+                'https',
+                'accounts.google.com',
+                '/o/oauth2/v2/auth',
+                '',
+                urlencode(query_params),
+                '',
+            )
+        )
+
+    def _generate_query_params(
+        self, google_auth_request: GoogleAuthRequestSchema
+    ) -> dict:
+        """Helper function to generate the OAuth query parameters."""
+        return {
+            'response_type': 'code',
+            'client_id': self.settings.GOOGLE_OAUTH_KEY,
+            'redirect_uri': google_auth_request.redirect_uri,
+            'state': google_auth_request.state,
+            'scope': 'email openid profile',
+            'access_type': 'offline',
+            'prompt': 'consent',
+        }
