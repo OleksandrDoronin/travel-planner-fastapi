@@ -5,7 +5,7 @@ from httpx import AsyncClient
 from settings import get_settings
 from starlette import status
 
-from tests.utils import extract_session_state
+from tests.utils import create_test_token, extract_session_state
 
 
 settings = get_settings()
@@ -71,15 +71,88 @@ async def test_google_callback_success(
     assert response.status_code == status.HTTP_200_OK
     response_data = response.json()
 
-    # Validate user information
-    expected_user = {
-        'email': 'test_vasya@mail.com',
-        'full_name': 'Vasya Lupin',
-        'profile_picture': 'https://example.com/avatar.png',
-    }
-    assert response_data['user'] == expected_user
+    assert 'user' in response_data
+    assert response_data['user']['email'] == 'test_vasya@mail.com'
+    assert response_data['user']['full_name'] == 'Vasya Lupin'
+    assert response_data['user']['profile_picture'] == 'https://example.com/avatar.png'
+    assert 'access_token' in response_data
+    assert 'refresh_token' in response_data
 
-    # Validate token information
-    assert response_data['access_token'] == 'valid_access_token'
-    assert response_data['refresh_token'] == 'valid_refresh_token'
 
+async def test_update_refresh_access_token_blacklist(
+    async_client: AsyncClient, mock_user_with_social_account
+):
+    """
+    Test that a refresh token can be used to generate new access and refresh tokens,
+    and that the old refresh token is blacklisted after usage.
+    """
+    mock_user, mock_social_account = mock_user_with_social_account
+    token = create_test_token(user_id=mock_user.id)
+    endpoint = 'api/v1/auth/token/refresh'
+
+    # First request to refresh the tokens should succeed
+    response = await async_client.post(endpoint, json={'refresh_token': token})
+    assert response.status_code == status.HTTP_201_CREATED
+    response_data = response.json()
+    assert 'access_token' in response_data
+    assert 'refresh_token' in response_data
+
+    # Second request with the same refresh token should fail with 401 Unauthorized
+    response = await async_client.post(endpoint, json={'refresh_token': token})
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+async def test_refresh_token_invalid(async_client: AsyncClient):
+    endpoint = 'api/v1/auth/token/refresh'
+    invalid_token = 'invalid_token'
+    response = await async_client.post(endpoint, json={'refresh_token': invalid_token})
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
+async def test_logout(async_client: AsyncClient, mock_user_with_social_account):
+    mock_user, mock_social_account = mock_user_with_social_account
+    token = create_test_token(user_id=mock_user.id)
+    token_request = token
+    endpoint = 'api/v1/auth/logout'
+    response = await async_client.post(
+        endpoint,
+        headers={'Authorization': f'Bearer {token}'},
+        json={'refresh_token': token_request},
+    )
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {'detail': 'Successfully logged out.'}
+
+
+@pytest.mark.asyncio
+async def test_logout_user_not_found(async_client: AsyncClient):
+    endpoint = 'api/v1/auth/logout'
+    non_existent_user_token = create_test_token(user_id=99999)
+
+    response = await async_client.post(
+        endpoint,
+        headers={'Authorization': f'Bearer {non_existent_user_token}'},
+        json={'refresh_token': 'some_refresh_token'},
+    )
+
+    assert response.status_code == status.HTTP_404_NOT_FOUND
+    assert response.json() == {'detail': 'User not found'}
+
+
+@pytest.mark.asyncio
+async def test_logout_unauthorized(async_client: AsyncClient):
+    endpoint = 'api/v1/auth/logout'
+
+    response = await async_client.post(
+        endpoint, json={'refresh_token': 'some_refresh_token'}
+    )
+    assert response.status_code == status.HTTP_403_FORBIDDEN
+    assert response.json() == {'detail': 'Not authenticated'}
+
+    invalid_token = 'invalid_token'
+    response = await async_client.post(
+        endpoint,
+        headers={'Authorization': f'Bearer {invalid_token}'},
+        json={'refresh_token': 'some_refresh_token'},
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+    assert response.json() == {'detail': 'Invalid token'}

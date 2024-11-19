@@ -30,6 +30,9 @@ pre-commit = "^4.0.1"
 pythonpath = [
     '.', 'src',
 ]
+filterwarnings = [
+    "ignore::DeprecationWarning:jose.jwt",
+]
 asyncio_mode = 'auto'
 
 [build-system]
