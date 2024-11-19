@@ -1,8 +1,9 @@
 # Virtual environment
 venv/
 *.virtualenv/
-.env
+.env.development
 .env.docker
+.env.test
 
 # IDE - PyCharm
 .idea/
@@ -22,3 +23,4 @@ __pycache__/
 *.tmp
 
 test.db
+test_project.db
