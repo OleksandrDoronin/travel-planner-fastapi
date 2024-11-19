@@ -1,8 +1,9 @@
 # Virtual environment
 venv/
 *.virtualenv/
-.env
+.env.development
 .env.docker
+.env.test
 
 # IDE - PyCharm
 .idea/

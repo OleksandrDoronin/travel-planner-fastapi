@@ -1,11 +1,14 @@
+import os
 from functools import lru_cache
 
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
 
 
 class Settings(BaseSettings):
     # Database settings
     DATABASE_URL: str
+    ENVIRONMENT: str
 
     # Security settings
     SECRET_KEY: str
@@ -22,11 +25,21 @@ class Settings(BaseSettings):
     GOOGLE_USERINFO_URL: str
     GOOGLE_REDIRECT_URI: str
 
-    class Config:
-        env_file = '../.env'
-        env_file_encoding = 'utf-8'
-
 
 @lru_cache
-def get_settings():
-    return Settings()
+def get_settings() -> Settings:
+    ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')  # noqa
+    if ENVIRONMENT == 'development':
+        load_dotenv(os.path.join(os.path.dirname(__file__), '../.env.development'))
+        return Settings()
+
+    elif ENVIRONMENT == 'production':
+        load_dotenv(os.path.join(os.path.dirname(__file__), '../.env.production'))
+        return Settings()
+
+    elif ENVIRONMENT == 'test':
+        load_dotenv(os.path.join(os.path.dirname(__file__), '../.env.test'))
+        return Settings()
+
+    else:
+        raise ValueError(f'Unknown environment: {ENVIRONMENT}')
