@@ -1,9 +1,13 @@
 from datetime import datetime
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
 from database import Base
 from sqlalchemy import DateTime, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+
+if TYPE_CHECKING:
+    from src.models.places import Place, PlannedPlace
 
 
 class User(Base):
@@ -25,6 +29,10 @@ class User(Base):
 
     social_accounts: Mapped[list['SocialAccount']] = relationship(
         'SocialAccount', back_populates='user'
+    )
+    places: Mapped[list['Place']] = relationship('Place', back_populates='user')
+    planned_places: Mapped[list['PlannedPlace']] = relationship(
+        'PlannedPlace', back_populates='user'
     )
 
 
