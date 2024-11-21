@@ -9,24 +9,22 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-      - .env.development
-      - .env.docker
+      - .env.production
     depends_on:
       postgres-db:
         condition: service_healthy
     restart: always
 
   postgres-db:
-    image: postgres:latest
+    image: postgres:16
     container_name: travel-planner-postgres
     healthcheck:
-      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER} --dbname ${POSTGRES_DB} --port ${POSTGRES_PORT}" ]
+      test: ["CMD", "pg_isready", "-U", "postgres"]
       interval: 10s
       timeout: 5s
       retries: 5
     env_file:
-      - .env.development
-      - .env.docker
+      - .env.production
     volumes:
       - pg_data:/var/lib/postgresql/data
     ports:

@@ -4,6 +4,7 @@ venv/
 .env.development
 .env.docker
 .env.test
+.env.production
 
 # IDE - PyCharm
 .idea/

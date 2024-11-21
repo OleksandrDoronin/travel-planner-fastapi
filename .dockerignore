@@ -7,3 +7,8 @@ __pycache__/
 *.log
 .idea/
 *.iml
+
+tests/
+
+test.db
+test_project.db
