@@ -2,8 +2,8 @@ import datetime
 from typing import TYPE_CHECKING, Optional
 
 from database import Base
-from enums.places import PlaceRating, PlaceType
-from sqlalchemy import DateTime, Enum, ForeignKey
+from enums.places import PlaceRating, PlaceType, PlannedPlaceStatus
+from sqlalchemy import DateTime, Enum, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
@@ -26,7 +26,13 @@ class Place(Base):
         DateTime(timezone=True), nullable=True
     )
     place_type: Mapped[PlaceType] = mapped_column(Enum(PlaceType), nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     user: Mapped['User'] = relationship('User', back_populates='places')
 
@@ -50,7 +56,16 @@ class PlannedPlace(Base):
         DateTime(timezone=True), nullable=False
     )
     planned_days_spent: Mapped[int] = mapped_column(nullable=False)
-    user_id: Mapped[int] = mapped_column(ForeignKey('users.id'))
+    user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
+    planned_status: Mapped[PlannedPlaceStatus] = mapped_column(
+        Enum(PlannedPlaceStatus), default=PlannedPlaceStatus.ACTIVE, nullable=False
+    )
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+    updated_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
+    )
 
     user: Mapped['User'] = relationship('User', back_populates='planned_places')
 

@@ -7,7 +7,7 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
 if TYPE_CHECKING:
-    from src.models.places import VisitedPlace
+    from src.models.places import Place, PlannedPlace
 
 
 class User(Base):
@@ -30,8 +30,9 @@ class User(Base):
     social_accounts: Mapped[list['SocialAccount']] = relationship(
         'SocialAccount', back_populates='user'
     )
-    visited_places: Mapped[list['VisitedPlace']] = relationship(
-        'VisitedPlace', back_populates='user'
+    places: Mapped[list['Place']] = relationship('Place', back_populates='user')
+    planned_places: Mapped[list['PlannedPlace']] = relationship(
+        'PlannedPlace', back_populates='user'
     )
 
 
