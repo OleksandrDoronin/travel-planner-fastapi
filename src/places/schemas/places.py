@@ -15,6 +15,7 @@ class PlaceCreate(BaseModel):
     days_spent: Optional[conint(ge=0, le=365)] = None
     visit_date: Optional[datetime] = None
     place_type: PlaceType
+    user_id: int
 
     model_config = ConfigDict(use_enum_values=True)
 
