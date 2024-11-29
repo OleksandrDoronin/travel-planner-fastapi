@@ -1,8 +1,14 @@
 import logging
-from typing import List
+from typing import Annotated, List
 
-from fastapi import APIRouter
-from places.schemas.places import PlaceGet
+from auth.schemas.user_schemas import UserBase
+from auth.security import get_current_user
+from fastapi import APIRouter, Body, HTTPException
+from fastapi.params import Depends
+
+from models import User
+from places.schemas.places import PlaceCreate, PlaceGet
+from places.services.places import PlaceService
 from settings import get_settings
 from starlette import status
 
@@ -18,8 +24,27 @@ settings = get_settings()
     response_model=PlaceGet,
     summary='Create a new place',
 )
-async def create_place():
-    pass
+async def create_place(
+    place_data: Annotated[PlaceCreate, Body(...)],
+    places_services: Annotated[PlaceService, Depends(PlaceService)],
+    current_user: User = Depends(get_current_user),
+):
+    try:
+        place = await places_services.create_place(
+            user_id=current_user.id, place_data=place_data
+        )
+        return place
+
+    except ValueError as e:
+        logger.error(f'Value error: {repr(e)}')
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+
+    except Exception as e:
+        logger.critical(f'Unexpected error: {repr(e)}', exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='Internal server error',
+        )
 
 
 @router.get(

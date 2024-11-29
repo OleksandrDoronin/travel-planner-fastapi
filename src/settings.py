@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     GOOGLE_USERINFO_URL: str
     GOOGLE_REDIRECT_URI: str
 
+    # Geonames
+    GEONAMES_USERNAME: str
+
 
 @lru_cache
 def get_settings() -> Settings:

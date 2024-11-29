@@ -8,8 +8,11 @@ from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
-class PlacesRepository:
-    def __init__(self, db_session: Annotated[AsyncSession, Depends(get_db)]):
+class PlaceRepository:
+    def __init__(
+        self,
+        db_session: Annotated[AsyncSession, Depends(get_db)],
+    ):
         self.db_session = db_session
 
     async def create_place(self, place: PlaceCreate) -> PlaceGet:

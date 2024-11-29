@@ -16,6 +16,8 @@ class Place(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     place_name: Mapped[str] = mapped_column(nullable=False)
+    city: Mapped[Optional[str]] = mapped_column(nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(nullable=True)
     description: Mapped[Optional[str]] = mapped_column(nullable=True)
     photo_url: Mapped[Optional[str]] = mapped_column(nullable=True)
     rating: Mapped[Optional[PlaceRating]] = mapped_column(
@@ -50,6 +52,8 @@ class PlannedPlace(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     place_name: Mapped[str] = mapped_column(nullable=False)
+    city: Mapped[Optional[str]] = mapped_column(nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(nullable=True)
     description: Mapped[Optional[str]] = mapped_column(nullable=True)
     photo_url: Mapped[Optional[str]] = mapped_column(nullable=True)
     planned_visit_date: Mapped[datetime] = mapped_column(
