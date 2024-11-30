@@ -37,6 +37,10 @@ async def create_place(
         logger.error(f'Value error: {repr(e)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
 
+    except RuntimeError as e:
+        logger.error(f'RuntimeError: {repr(e)}')
+        raise HTTPException(status_code=500, detail=str(e))
+
     except Exception as e:
         logger.critical(f'Unexpected error: {repr(e)}', exc_info=True)
         raise HTTPException(

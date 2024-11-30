@@ -26,7 +26,8 @@ class Settings(BaseSettings):
     GOOGLE_REDIRECT_URI: str
 
     # Geonames
-    GEONAMES_USERNAME: str
+    OPEN_CAGE_DATA: str
+    OPEN_CAGE_URL: str
 
 
 @lru_cache

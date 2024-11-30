@@ -3,9 +3,10 @@ from datetime import date
 from typing import Annotated, Optional
 
 from fastapi import Depends
-from places.repositories.geo_names import GeoNamesRepository
+from places.repositories.geo_names import GeoRepository
 from places.repositories.places import PlaceRepository
 from places.schemas.places import PlaceCreate, PlaceGet
+from places.utils import format_title_case
 
 
 logger = logging.getLogger('travel_planner_app')
@@ -15,7 +16,7 @@ class PlaceService:
     def __init__(
         self,
         place_repository: Annotated[PlaceRepository, Depends(PlaceRepository)],
-        geo_repository: Annotated[GeoNamesRepository, Depends(GeoNamesRepository)],
+        geo_repository: Annotated[GeoRepository, Depends(GeoRepository)],
     ):
         self.place_repository = place_repository
         self.geo_repository = geo_repository
@@ -24,6 +25,11 @@ class PlaceService:
         """
         Creates a new location after validating and formatting the data.
         """
+        formatted_city, formatted_country = await self._format_location(
+            place_data.city, place_data.country
+        )
+        await self._validate_location(formatted_city, formatted_country)
+
         await self._check_existing_place(
             user_id=user_id,
             city=place_data.city,
@@ -60,3 +66,40 @@ class PlaceService:
                 f'The place "{place_name}" in city "{city}" with type "{place_type}"'
                 f' and visit date "{visit_date}" already exists for this user.'
             )
+
+    @staticmethod
+    async def _format_location(city: str, country: str) -> tuple:
+        return format_title_case(value=city), format_title_case(value=country)
+
+    async def _validate_location(self, city: str, country: str) -> None | bool:
+        formatted_city, formatted_country = await self._format_location(
+            city=city, country=country
+        )
+
+        location_data = await self.geo_repository.validate_location(
+            city=formatted_city, country=formatted_country
+        )
+
+        if not location_data:
+            raise ValueError(
+                f'City "{formatted_city}" or country "{formatted_country}" '
+                f'does not exist.'
+            )
+
+        components = location_data.get('components', {})
+
+        if 'city' not in components or 'country' not in components:
+            raise ValueError(
+                f'Invalid city or country in response for {formatted_city}, '
+                f'{formatted_country}.'
+            )
+
+        city_matches = components['city'].lower() == formatted_city.lower()
+        country_matches = components['country'].lower() == formatted_country.lower()
+
+        if not city_matches or not country_matches:
+            raise ValueError(
+                f'City "{formatted_city}" or country "{formatted_country}" '
+                f'does not match the API response.'
+            )
+        return True
