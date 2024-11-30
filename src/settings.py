@@ -25,6 +25,10 @@ class Settings(BaseSettings):
     GOOGLE_USERINFO_URL: str
     GOOGLE_REDIRECT_URI: str
 
+    # Geonames
+    OPEN_CAGE_DATA: str
+    OPEN_CAGE_URL: str
+
 
 @lru_cache
 def get_settings() -> Settings:

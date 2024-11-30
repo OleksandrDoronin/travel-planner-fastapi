@@ -8,6 +8,7 @@ from database import get_db
 from fastapi import FastAPI
 from logging_config import setup_logging
 from middleware import setup_middleware
+from places.routers import places
 from tasks.token_cleanup import remove_expired_tokens
 
 
@@ -49,5 +50,7 @@ async def lifespan(app: FastAPI):  # noqa F841
 app = FastAPI(title='Travel planner API', lifespan=lifespan)
 setup_middleware(app)
 
-app.include_router(google_auth.router, prefix='/api/v1')
-app.include_router(user.router, prefix='/api/v1')
+pre = '/api/v1'
+app.include_router(google_auth.router, prefix=pre)
+app.include_router(user.router, prefix=pre)
+app.include_router(places.router, prefix=pre)

@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, Optional
 
 from database import Base
 from enums.places import PlaceRating, PlaceType, PlannedPlaceStatus
-from sqlalchemy import DateTime, Enum, ForeignKey, func
+from sqlalchemy import Date, DateTime, Enum, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 
@@ -16,15 +16,15 @@ class Place(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     place_name: Mapped[str] = mapped_column(nullable=False)
+    city: Mapped[Optional[str]] = mapped_column(nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(nullable=True)
     description: Mapped[Optional[str]] = mapped_column(nullable=True)
     photo_url: Mapped[Optional[str]] = mapped_column(nullable=True)
     rating: Mapped[Optional[PlaceRating]] = mapped_column(
         Enum(PlaceRating), nullable=True
     )
     days_spent: Mapped[Optional[int]] = mapped_column(nullable=True)
-    visit_date: Mapped[Optional[datetime]] = mapped_column(
-        DateTime(timezone=True), nullable=True
-    )
+    visit_date: Mapped[Optional[datetime.date]] = mapped_column(Date, nullable=True)
     place_type: Mapped[PlaceType] = mapped_column(Enum(PlaceType), nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
     created_at: Mapped[datetime] = mapped_column(
@@ -50,10 +50,12 @@ class PlannedPlace(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True, index=True)
     place_name: Mapped[str] = mapped_column(nullable=False)
+    city: Mapped[Optional[str]] = mapped_column(nullable=True)
+    country: Mapped[Optional[str]] = mapped_column(nullable=True)
     description: Mapped[Optional[str]] = mapped_column(nullable=True)
     photo_url: Mapped[Optional[str]] = mapped_column(nullable=True)
-    planned_visit_date: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), nullable=False
+    planned_visit_date: Mapped[Optional[datetime.date]] = mapped_column(
+        Date, nullable=True
     )
     planned_days_spent: Mapped[int] = mapped_column(nullable=False)
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
