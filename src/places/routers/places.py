@@ -1,11 +1,9 @@
 import logging
 from typing import Annotated, List
 
-from auth.schemas.user_schemas import UserBase
 from auth.security import get_current_user
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Depends
-
 from models import User
 from places.schemas.places import PlaceCreate, PlaceGet
 from places.services.places import PlaceService

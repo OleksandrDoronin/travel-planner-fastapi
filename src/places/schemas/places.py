@@ -2,7 +2,7 @@ from datetime import date, datetime
 from typing import Optional
 
 from enums.places import PlaceRating, PlaceType
-from pydantic import BaseModel, ConfigDict, HttpUrl, conint, constr, field_validator
+from pydantic import BaseModel, ConfigDict, conint, constr, field_validator
 
 
 class PlaceCreate(BaseModel):
@@ -12,7 +12,7 @@ class PlaceCreate(BaseModel):
     city: str
     country: str
     description: Optional[constr(min_length=0, max_length=500)] = None
-    photo_url: Optional[HttpUrl] = None
+    photo_url: Optional[str] = None
     rating: Optional[PlaceRating] = None
     days_spent: Optional[conint(ge=0, le=365)] = None
     visit_date: Optional[date] = None
@@ -35,7 +35,7 @@ class PlaceGet(BaseModel):
     city: str
     country: str
     description: Optional[str] = None
-    photo_url: Optional[HttpUrl] = None
+    photo_url: Optional[str] = None
     rating: Optional[PlaceRating] = None
     days_spent: Optional[int] = None
     visit_date: Optional[date] = None
@@ -43,4 +43,4 @@ class PlaceGet(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = ConfigDict(use_enum_values=True)
+    model_config = ConfigDict(use_enum_values=True, from_attributes=True)
