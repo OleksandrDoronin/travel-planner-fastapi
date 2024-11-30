@@ -39,7 +39,9 @@ async def create_place(
 
     except RuntimeError as e:
         logger.error(f'RuntimeError: {repr(e)}')
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+        )
 
     except Exception as e:
         logger.critical(f'Unexpected error: {repr(e)}', exc_info=True)

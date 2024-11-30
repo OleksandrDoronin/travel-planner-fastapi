@@ -1,8 +1,11 @@
+import logging
+
 import httpx
 from settings import get_settings
 
 
 settings = get_settings()
+logger = logging.getLogger('travel_planner_app')
 
 
 class GeoRepository:
@@ -24,11 +27,16 @@ class GeoRepository:
 
             return data['results'][0]
 
-        except httpx.HTTPStatusError:
-            raise RuntimeError('HTTP error with OpenCage API')
+        except httpx.HTTPStatusError as e:
+            logger.error(f'HTTP error with OpenCage API: {str(e)}')
+            raise RuntimeError('Service error. Please try again later.')
 
-        except httpx.RequestError:
-            raise RuntimeError('Request error occurred')
+        except httpx.RequestError as e:
+            logger.error(f'Request error: {str(e)}')
+            raise RuntimeError('Service unavailable. Please try again later.')
 
-        except Exception:
-            raise
+        except Exception as e:
+            logger.critical(
+                f'Unexpected error in GeoRepository: {str(e)}', exc_info=True
+            )
+            raise RuntimeError('An unexpected error occurred. Please contact support.')
