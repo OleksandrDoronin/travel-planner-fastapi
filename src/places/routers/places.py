@@ -57,8 +57,23 @@ async def create_place(
     response_model=List[PlaceGet],
     summary='Get a list of all places',
 )
-async def get_places():
-    pass
+async def get_places(
+    place_service: Annotated[PlaceService, Depends(PlaceService)],
+    current_user: Annotated[User, Depends(get_current_user)],
+):
+    try:
+        return await place_service.get_places(user_id=current_user.id)
+
+    except ValueError as e:
+        logger.error(f'Value error: {repr(e)}')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    except Exception as e:
+        logger.critical(f'Unexpected error: {repr(e)}', exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='Failed to fetch places.',
+        )
 
 
 @router.get(

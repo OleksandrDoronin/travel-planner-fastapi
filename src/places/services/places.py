@@ -103,3 +103,14 @@ class PlaceService:
                 f'does not match the API response.'
             )
         return True
+
+    async def get_places(self, user_id: int):
+        return await self.place_repository.get_places_by_user(user_id=user_id)
+
+    async def get_place_by_id(self, place_id: int, user_id):
+        place = await self.place_repository.get_place_by_id(
+            place_id=place_id, user_id=user_id
+        )
+        if not place:
+            raise ValueError(f'Place with ID {place_id} not found.')
+        return place

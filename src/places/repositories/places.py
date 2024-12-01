@@ -55,4 +55,16 @@ class PlaceRepository:
         result = await self.db_session.execute(stmt)
         places = result.scalars().all()
 
-        return [Place.model_validate(place) for place in places]
+        return [PlaceGet.model_validate(place) for place in places]
+
+    async def get_place_by_id(self, place_id, user_id):
+        stmt = select(Place).where(
+            Place.id == place_id,
+            Place.user_id == user_id,
+        )
+        result = await self.db_session.execute(stmt)
+        place = result.scalars().first()
+
+        if place:
+            return PlaceGet.model_validate(place)
+        return None
