@@ -1,5 +1,5 @@
 import os
-
+from datetime import date
 
 os.environ['ENVIRONMENT'] = 'test'
 from typing import AsyncGenerator
@@ -8,7 +8,7 @@ import pytest
 from database import Base, get_db
 from httpx import ASGITransport, AsyncClient
 from main import app
-from models import SocialAccount, User
+from models import Place, SocialAccount, User
 from settings import get_settings
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
@@ -93,3 +93,24 @@ async def mock_current_user(async_session: AsyncSession):
     await async_session.commit()
     await async_session.refresh(test_user)
     return test_user
+
+
+@pytest.fixture(scope='function')
+async def mock_place(async_session: AsyncSession, mock_user_with_social_account: User):
+    test_user, _ = mock_user_with_social_account
+    test_place = Place(
+        place_name='Test place',
+        city='Kyiv',
+        country='Ukraine',
+        description='my favorite place',
+        photo_url='kyiv.ua',
+        rating=5,
+        days_spent=5,
+        visit_date=date(2024, 1, 28),
+        place_type='visited',
+        user_id=test_user.id,
+    )
+    async_session.add(test_place)
+    await async_session.commit()
+    await async_session.refresh(test_place)
+    return test_place

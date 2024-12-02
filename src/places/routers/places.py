@@ -94,7 +94,7 @@ async def get_place_by_id(
 
     except ValueError as e:
         logger.error(f'Value error: {repr(e)}')
-        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
     except Exception as e:
         logger.critical(f'Unexpected error: {repr(e)}', exc_info=True)
