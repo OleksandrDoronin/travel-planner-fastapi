@@ -57,7 +57,7 @@ class PlaceRepository:
 
         return [PlaceGet.model_validate(place) for place in places]
 
-    async def get_place_by_id(self, place_id, user_id):
+    async def get_place_by_id(self, place_id: int, user_id: int) -> Optional[PlaceGet]:
         stmt = select(Place).where(
             Place.id == place_id,
             Place.user_id == user_id,

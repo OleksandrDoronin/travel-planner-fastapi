@@ -82,5 +82,23 @@ async def get_places(
     response_model=PlaceGet,
     summary='Retrieve a specific place by ID',
 )
-async def get_place_by_id(place_id: int):
-    pass
+async def get_place_by_id(
+    current_user: Annotated[User, Depends(get_current_user)],
+    place_service: Annotated[PlaceService, Depends(PlaceService)],
+    place_id: int,
+):
+    try:
+        return await place_service.get_place_by_id(
+            place_id=place_id, user_id=current_user.id
+        )
+
+    except ValueError as e:
+        logger.error(f'Value error: {repr(e)}')
+        return HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    except Exception as e:
+        logger.critical(f'Unexpected error: {repr(e)}', exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='Failed to fetch places.',
+        )

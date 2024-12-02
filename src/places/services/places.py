@@ -104,10 +104,10 @@ class PlaceService:
             )
         return True
 
-    async def get_places(self, user_id: int):
+    async def get_places(self, user_id: int) -> list[PlaceGet]:
         return await self.place_repository.get_places_by_user(user_id=user_id)
 
-    async def get_place_by_id(self, place_id: int, user_id):
+    async def get_place_by_id(self, place_id: int, user_id: int) -> PlaceGet:
         place = await self.place_repository.get_place_by_id(
             place_id=place_id, user_id=user_id
         )
