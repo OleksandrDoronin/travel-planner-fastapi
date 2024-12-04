@@ -2,7 +2,7 @@ import logging
 from datetime import date
 from typing import Annotated, Optional
 
-from database import get_db
+from config.database import get_db
 from fastapi import Depends
 from models import Place
 from places.schemas.places import PlaceCreate, PlaceGet

@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from database import Base
+from config.database import Base
 from sqlalchemy import DateTime, func
 from sqlalchemy.orm import Mapped, mapped_column
 

@@ -1,7 +1,7 @@
 from typing import Annotated, Optional
 
 from auth.schemas.auth_schemas import TokenBlacklistSchema
-from database import get_db
+from config.database import get_db
 from fastapi import Depends
 from models import TokenBlacklist
 from sqlalchemy import select

@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from auth.schemas.user_schemas import SocialAccountLink, SocialAccountResponse
-from database import get_db
+from config.database import get_db
 from fastapi import Depends
 from models.users import SocialAccount
 from sqlalchemy import select

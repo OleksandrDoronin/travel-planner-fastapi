@@ -4,9 +4,9 @@ from contextlib import asynccontextmanager
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from auth.routers import google_auth, user
-from database import get_db
+from config.database import get_db
+from config.logging_config import setup_logging
 from fastapi import FastAPI
-from logging_config import setup_logging
 from middleware import setup_middleware
 from places.routers import places
 from tasks.token_cleanup import remove_expired_tokens

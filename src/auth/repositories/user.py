@@ -1,7 +1,7 @@
 from typing import Annotated, Optional
 
 from auth.schemas.user_schemas import UserBase
-from database import get_db
+from config.database import get_db
 from fastapi import Depends
 from models import User
 from sqlalchemy import select

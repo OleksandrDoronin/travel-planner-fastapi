@@ -3,8 +3,7 @@ import json
 from datetime import datetime, timedelta, timezone
 
 from jose import jwt
-
-from src.settings import get_settings
+from settings import get_settings
 
 
 settings = get_settings()

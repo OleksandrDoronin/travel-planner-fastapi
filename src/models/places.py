@@ -1,7 +1,7 @@
 import datetime
 from typing import TYPE_CHECKING, Optional
 
-from database import Base
+from config.database import Base
 from enums.places import PlaceRating, PlaceType, PlannedPlaceStatus
 from sqlalchemy import Date, DateTime, Enum, ForeignKey, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship

@@ -6,7 +6,7 @@ os.environ['ENVIRONMENT'] = 'test'
 from typing import AsyncGenerator
 
 import pytest
-from database import Base, get_db
+from config.database import Base, get_db
 from httpx import ASGITransport, AsyncClient
 from main import app
 from models import Place, SocialAccount, User
