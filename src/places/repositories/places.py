@@ -50,8 +50,10 @@ class PlaceRepository:
             return PlaceGet.model_validate(place)
         return None
 
-    async def get_places_by_user(self, user_id: int) -> list[PlaceGet]:
-        stmt = select(Place).where(Place.user_id == user_id)
+    async def get_places_by_user(
+        self, user_id: int, limit: int = 10, offset: int = 0
+    ) -> list[PlaceGet]:
+        stmt = select(Place).where(Place.user_id == user_id).offset(offset).limit(limit)
         result = await self.db_session.execute(stmt)
         places = result.scalars().all()
 

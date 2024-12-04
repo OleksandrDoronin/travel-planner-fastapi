@@ -2,9 +2,11 @@ import logging
 from typing import Annotated, List
 
 from auth.security import get_current_user
+from dependencies import get_pagination_params
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Depends
 from models import User
+from pagination import PaginationParams
 from places.schemas.places import PlaceCreate, PlaceGet
 from places.services.places import PlaceService
 from settings import get_settings
@@ -60,9 +62,12 @@ async def create_place(
 async def get_places(
     place_service: Annotated[PlaceService, Depends(PlaceService)],
     current_user: Annotated[User, Depends(get_current_user)],
+    pagination: Annotated[PaginationParams, Depends(get_pagination_params)],
 ):
     try:
-        return await place_service.get_places(user_id=current_user.id)
+        return await place_service.get_places(
+            user_id=current_user.id, offset=pagination.offset, limit=pagination.limit
+        )
 
     except ValueError as e:
         logger.error(f'Value error: {repr(e)}')

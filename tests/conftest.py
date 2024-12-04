@@ -1,6 +1,7 @@
 import os
 from datetime import date
 
+
 os.environ['ENVIRONMENT'] = 'test'
 from typing import AsyncGenerator
 
