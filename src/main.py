@@ -9,6 +9,7 @@ from config.logging_config import setup_logging
 from fastapi import FastAPI
 from middleware import setup_middleware
 from places.routers import places
+from services.cache import CacheService
 from tasks.token_cleanup import remove_expired_tokens
 
 
@@ -21,6 +22,14 @@ logger = logging.getLogger('travel_planner_app')
 @asynccontextmanager
 async def lifespan(app: FastAPI):  # noqa F841
     """Controls the application lifecycle."""
+
+    # Checking the connection to Redis when the application starts
+    redis_connected = await CacheService.check_connection()
+    if not redis_connected:
+        logger.warning(
+            """Redis is not available.
+            Some caching functionality may be unavailable."""
+        )
 
     async def cleanup_task():
         """

@@ -1,12 +1,12 @@
 import logging
-from datetime import date
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import Depends
 from places.repositories.geo_names import GeoRepository
 from places.repositories.places import PlaceRepository
 from places.schemas.places import PlaceCreate, PlaceGet
 from places.utils import format_title_case
+from services.cache import CacheService
 
 
 logger = logging.getLogger('travel_planner_app')
@@ -17,92 +17,113 @@ class PlaceService:
         self,
         place_repository: Annotated[PlaceRepository, Depends(PlaceRepository)],
         geo_repository: Annotated[GeoRepository, Depends(GeoRepository)],
+        cache_service: Annotated[CacheService, Depends(CacheService)],
     ):
         self.place_repository = place_repository
         self.geo_repository = geo_repository
+        self.cache_service = cache_service
 
     async def create_place(self, user_id: int, place_data: PlaceCreate) -> PlaceGet:
         """
         Creates a new location after validating and formatting the data.
-        """
-        formatted_city, formatted_country = await self._format_location(
-            place_data.city, place_data.country
-        )
-        await self._validate_location(formatted_city, formatted_country)
 
-        await self._check_existing_place(
+        This method validates the location data (city and country),
+        ensures the place is unique for the user, and then creates a new place entry.
+        """
+
+        # Format the city and country before validation
+        formatted_city, formatted_country = self._format_location(
+            city=place_data.city, country=place_data.country
+        )
+        # Validate the city and country
+        await self._validate_location(city=formatted_city, country=formatted_country)
+
+        # Ensure that the place is unique for this user
+        await self._ensure_place_is_unique(
+            user_id=user_id, place_data=place_data, formatted_city=formatted_city
+        )
+
+        return await self.place_repository.create_place(
+            place=place_data, user_id=user_id
+        )
+
+    async def _ensure_place_is_unique(
+        self, user_id: int, place_data: PlaceCreate, formatted_city: str
+    ) -> None:
+        """
+        Ensures that the place is unique for the user by checking if it already exists.
+        """
+
+        existing_place = await self.place_repository.get_place_by_details(
             user_id=user_id,
-            city=place_data.city,
             place_name=place_data.place_name,
+            city=formatted_city,
             place_type=place_data.place_type,
             visit_date=place_data.visit_date,
         )
-
-        try:
-            return await self.place_repository.create_place(
-                place=place_data, user_id=user_id
-            )
-        except Exception:
-            raise
-
-    async def _check_existing_place(
-        self,
-        user_id: int,
-        place_name: str,
-        city: str,
-        place_type: str,
-        visit_date: Optional[date],
-    ) -> None:
-        existing_place = await self.place_repository.get_place_by_details(
-            user_id=user_id,
-            place_name=place_name,
-            city=city,
-            place_type=place_type,
-            visit_date=visit_date,
-        )
-
         if existing_place:
             raise ValueError(
-                f'The place "{place_name}" in city "{city}" with type "{place_type}"'
-                f' and visit date "{visit_date}" already exists for this user.'
+                f'The place "{place_data.place_name}" in city "{formatted_city}" '
+                f'with type "{place_data.place_type}" already exists for this user.'
             )
 
-    @staticmethod
-    async def _format_location(city: str, country: str) -> tuple:
-        return format_title_case(value=city), format_title_case(value=country)
+    async def _validate_location(self, city: str, country: str) -> None:
+        """
+        Validates city and country using the geo repository or cache.
+        """
 
-    async def _validate_location(self, city: str, country: str) -> None | bool:
-        formatted_city, formatted_country = await self._format_location(
+        location_data = await self._get_location_data_from_cache_or_api(
             city=city, country=country
         )
-
-        location_data = await self.geo_repository.validate_location(
-            city=formatted_city, country=formatted_country
-        )
-
-        if not location_data:
-            raise ValueError(
-                f'City "{formatted_city}" or country "{formatted_country}" '
-                f'does not exist.'
-            )
-
         components = location_data.get('components', {})
 
-        if 'city' not in components or 'country' not in components:
-            raise ValueError(
-                f'Invalid city or country in response for {formatted_city}, '
-                f'{formatted_country}.'
-            )
+        if not self._is_location_valid(components, city, country):
+            logger.error(f'Location mismatch for {city}, {country}: {components}')
+            raise ValueError(f'Location mismatch: {city}, {country}')
 
-        city_matches = components['city'].lower() == formatted_city.lower()
-        country_matches = components['country'].lower() == formatted_country.lower()
+    async def _get_location_data_from_cache_or_api(self, city: str, country: str):
+        """
+        Tries to get the location data from cache, if not available calls
+        the geo repository.
 
-        if not city_matches or not country_matches:
-            raise ValueError(
-                f'City "{formatted_city}" or country "{formatted_country}" '
-                f'does not match the API response.'
-            )
-        return True
+        This method first checks the cache for location data. If it's not found,
+        it queries the geo repository and stores the result in the cache.
+        """
+        # Generate a cache key
+        cache_key = f'geo_{city}_{country}'
+
+        # Attempt to get the data from the cache
+        cached_data = await self.cache_service.get_cache(key=cache_key)
+        if cached_data:
+            return cached_data
+
+        location_data = await self.geo_repository.validate_location(
+            city=city, country=country
+        )
+        if not location_data:
+            raise ValueError(f'Invalid location: {city}, {country}')
+
+        # Store the data in the cache
+        await self.cache_service.set_cache(key=cache_key, value=location_data)
+        return location_data
+
+    @staticmethod
+    def _is_location_valid(components: dict, city: str, country: str) -> bool:
+        """
+        Checks if the API response matches the provided city and country.
+        """
+
+        return (
+            components.get('city', '').lower() == city.lower()
+            and components.get('country', '').lower() == country.lower()
+        )
+
+    @staticmethod
+    def _format_location(city: str, country: str) -> tuple[str, str]:
+        """
+        Formats the city and country into title case.
+        """
+        return format_title_case(value=city), format_title_case(value=country)
 
     async def get_places(self, user_id: int, offset: int, limit: int) -> list[PlaceGet]:
         return await self.place_repository.get_places_by_user(
