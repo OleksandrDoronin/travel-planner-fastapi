@@ -46,10 +46,9 @@ async def create_place(
         )
 
     except Exception as e:
-        logger.critical(f'Unexpected error: {repr(e)}', exc_info=True)
+        logger.error(f'Unexpected error: {e}', exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Internal server error',
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Internal error'
         )
 
 
@@ -74,10 +73,9 @@ async def get_places(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
     except Exception as e:
-        logger.critical(f'Unexpected error: {repr(e)}', exc_info=True)
+        logger.error(f'Unexpected error: {e}', exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Failed to fetch places.',
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Internal error'
         )
 
 
@@ -102,8 +100,7 @@ async def get_place_by_id(
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
     except Exception as e:
-        logger.critical(f'Unexpected error: {repr(e)}', exc_info=True)
+        logger.error(f'Unexpected error: {e}', exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Failed to fetch places.',
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Internal error'
         )

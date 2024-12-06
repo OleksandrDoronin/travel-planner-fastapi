@@ -43,9 +43,10 @@ class PlaceService:
             user_id=user_id, place_data=place_data, formatted_city=formatted_city
         )
 
-        return await self.place_repository.create_place(
+        place = await self.place_repository.create_place(
             place=place_data, user_id=user_id
         )
+        return PlaceGet.model_validate(place)
 
     async def _ensure_place_is_unique(
         self, user_id: int, place_data: PlaceCreate, formatted_city: str
@@ -126,9 +127,12 @@ class PlaceService:
         return format_title_case(value=city), format_title_case(value=country)
 
     async def get_places(self, user_id: int, offset: int, limit: int) -> list[PlaceGet]:
-        return await self.place_repository.get_places_by_user(
+        places = await self.place_repository.get_places_by_user(
             user_id=user_id, offset=offset, limit=limit
         )
+        if not places:
+            raise ValueError('No places found for the given user.')
+        return [PlaceGet.model_validate(place) for place in places]
 
     async def get_place_by_id(self, place_id: int, user_id: int) -> PlaceGet:
         place = await self.place_repository.get_place_by_id(
@@ -136,4 +140,4 @@ class PlaceService:
         )
         if not place:
             raise ValueError(f'Place with ID {place_id} not found.')
-        return place
+        return PlaceGet.model_validate(place)
