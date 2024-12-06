@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import Depends
 from places.repositories.geo_names import GeoRepository
 from places.repositories.places import PlaceRepository
+from places.schemas.filters import PlaceFilter
 from places.schemas.places import PlaceCreate, PlaceGet
 from places.utils import format_title_case
 from services.cache import CacheService
@@ -126,9 +127,11 @@ class PlaceService:
         """
         return format_title_case(value=city), format_title_case(value=country)
 
-    async def get_places(self, user_id: int, offset: int, limit: int) -> list[PlaceGet]:
+    async def get_places(
+        self, user_id: int, filters: PlaceFilter, offset: int, limit: int
+    ) -> list[PlaceGet]:
         places = await self.place_repository.get_places_by_user(
-            user_id=user_id, offset=offset, limit=limit
+            user_id=user_id, filters=filters, offset=offset, limit=limit
         )
         if not places:
             raise ValueError('No places found for the given user.')

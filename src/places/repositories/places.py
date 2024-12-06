@@ -5,6 +5,7 @@ from typing import Annotated, Optional
 from config.database import get_db
 from fastapi import Depends
 from models import Place
+from places.schemas.filters import PlaceFilter
 from places.schemas.places import PlaceCreate
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -46,8 +47,12 @@ class PlaceRepository:
         result = await self.db_session.execute(stmt)
         return result.scalars().first()
 
-    async def get_places_by_user(self, user_id: int, limit: int = 10, offset: int = 0):
+    async def get_places_by_user(
+        self, filters: PlaceFilter, user_id: int, limit: int = 10, offset: int = 0
+    ):
         stmt = select(Place).where(Place.user_id == user_id).offset(offset).limit(limit)
+        stmt = filters.filter(stmt)
+        stmt = filters.sort(stmt)
         result = await self.db_session.execute(stmt)
         places = result.scalars().all()
         return places
