@@ -58,34 +58,8 @@ async def async_session() -> AsyncGenerator[AsyncSession, None]:
 
 
 @pytest.fixture(scope='function')
-async def mock_user_with_social_account(async_session: AsyncSession):
+async def mock_user(async_session: AsyncSession):
     test_user = User(
-        id=1,
-        full_name='Borya',
-        email='borya@mail.com',
-        profile_picture=None,
-    )
-    async_session.add(test_user)
-
-    social_account = SocialAccount(
-        service='google',
-        social_account_id='123456789',
-        access_token='my token',
-        refresh_token='my',
-        user_id=test_user.id,
-    )
-
-    async_session.add(social_account)
-    await async_session.commit()
-    await async_session.refresh(test_user)
-    await async_session.refresh(social_account)
-    return test_user, social_account
-
-
-@pytest.fixture(scope='function')
-async def mock_current_user(async_session: AsyncSession):
-    test_user = User(
-        id=1,
         full_name='Borya',
         email='borya@mail.com',
         profile_picture=None,
@@ -97,8 +71,22 @@ async def mock_current_user(async_session: AsyncSession):
 
 
 @pytest.fixture(scope='function')
-async def mock_place(async_session: AsyncSession, mock_user_with_social_account: User):
-    test_user, _ = mock_user_with_social_account
+async def mock_social_account(async_session: AsyncSession, mock_user: User):
+    social_account = SocialAccount(
+        service='google',
+        social_account_id='123456789',
+        access_token='my token',
+        refresh_token='my',
+        user_id=mock_user.id,
+    )
+    async_session.add(social_account)
+    await async_session.commit()
+    await async_session.refresh(social_account)
+    return social_account
+
+
+@pytest.fixture(scope='function')
+async def mock_place(async_session: AsyncSession, mock_user: User):
     test_place = Place(
         place_name='Test place',
         city='Kyiv',
@@ -109,7 +97,7 @@ async def mock_place(async_session: AsyncSession, mock_user_with_social_account:
         days_spent=5,
         visit_date=date(2024, 1, 28),
         place_type='visited',
-        user_id=test_user.id,
+        user_id=mock_user.id,
     )
     async_session.add(test_place)
     await async_session.commit()

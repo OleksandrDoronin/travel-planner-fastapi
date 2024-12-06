@@ -79,14 +79,15 @@ async def test_google_callback_success(
     assert 'refresh_token' in response_data
 
 
+@pytest.mark.asyncio
 async def test_update_refresh_access_token_blacklist(
-    async_client: AsyncClient, mock_user_with_social_account
+    async_client: AsyncClient, mock_user
 ):
     """
     Test that a refresh token can be used to generate new access and refresh tokens,
     and that the old refresh token is blacklisted after usage.
     """
-    mock_user, mock_social_account = mock_user_with_social_account
+
     token = create_test_token(user_id=mock_user.id)
     endpoint = 'api/v1/auth/token/refresh'
 
@@ -102,6 +103,7 @@ async def test_update_refresh_access_token_blacklist(
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
+@pytest.mark.asyncio
 async def test_refresh_token_invalid(async_client: AsyncClient):
     endpoint = 'api/v1/auth/token/refresh'
     invalid_token = 'invalid_token'
@@ -109,8 +111,8 @@ async def test_refresh_token_invalid(async_client: AsyncClient):
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
 
 
-async def test_logout(async_client: AsyncClient, mock_user_with_social_account):
-    mock_user, mock_social_account = mock_user_with_social_account
+@pytest.mark.asyncio
+async def test_logout(async_client: AsyncClient, mock_user):
     token = create_test_token(user_id=mock_user.id)
     token_request = token
     endpoint = 'api/v1/auth/logout'

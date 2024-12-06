@@ -1,12 +1,11 @@
 import logging
 from typing import Annotated, List
 
-from fastapi_filter import FilterDepends
-
 from auth.security import get_current_user
 from dependencies import get_pagination_params
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Depends
+from fastapi_filter import FilterDepends
 from models import User
 from pagination import PaginationParams
 from places.schemas.filters import PlaceFilter

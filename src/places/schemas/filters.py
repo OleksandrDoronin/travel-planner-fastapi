@@ -2,7 +2,7 @@ from typing import Optional
 
 from fastapi_filter.contrib.sqlalchemy import Filter
 from models import Place
-from pydantic import Field, field_validator
+from pydantic import ConfigDict, Field, field_validator
 
 
 class PlaceFilter(Filter):
@@ -13,6 +13,8 @@ class PlaceFilter(Filter):
 
     # Sorting parameters
     order_by: Optional[list[str]] = Field(default=None, alias='sortByDateOrRating')
+
+    model_config = ConfigDict(populate_by_name=True, extra='allow')
 
     @field_validator('order_by')
     def restrict_sortable_fields(cls, value):  # noqa
@@ -32,7 +34,3 @@ class PlaceFilter(Filter):
 
     class Constants(Filter.Constants):
         model = Place
-
-    class Config:
-        populate_by_name = True
-        extra = 'allow'

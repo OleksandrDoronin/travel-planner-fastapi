@@ -1,15 +1,14 @@
+import pytest
 from httpx import AsyncClient
 from starlette import status
 
 from tests.utils import create_test_token
 
 
-async def test_successful_create_place(
-    async_client: AsyncClient, mock_user_with_social_account
-):
+@pytest.mark.asyncio
+async def test_successful_create_place(async_client: AsyncClient, mock_user):
     """Test successful create place"""
 
-    mock_user, mock_social_account = mock_user_with_social_account
     token = create_test_token(user_id=mock_user.id)
 
     url = 'api/v1/places/'
@@ -37,10 +36,10 @@ async def test_successful_create_place(
     assert response_data['rating'] == 5
 
 
+@pytest.mark.asyncio
 async def test_create_place_with_invalid_city_and_country(
-    async_client: AsyncClient, mock_user_with_social_account
+    async_client: AsyncClient, mock_user
 ):
-    mock_user, mock_social_account = mock_user_with_social_account
     token = create_test_token(user_id=mock_user.id)
 
     url = 'api/v1/places/'
