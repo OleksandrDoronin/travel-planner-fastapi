@@ -6,7 +6,7 @@ from places.exceptions import LocationValidationError, PlaceAlreadyExistsError
 from places.repositories.geo_names import GeoRepository
 from places.repositories.places import PlaceRepository
 from places.schemas.filters import PlaceFilter
-from places.schemas.places import PlaceCreate, PlaceGet
+from places.schemas.places import PlaceCreate, PlaceGet, PlaceUpdate
 from places.utils import format_title_case
 from services.cache import CacheService
 
@@ -79,7 +79,8 @@ class PlaceService:
         location_data = await self._get_location_data_from_cache_or_api(
             city=city, country=country
         )
-        if not location_data:
+        components = location_data.get('components', {})
+        if not self._is_location_valid(components, city, country):
             raise LocationValidationError(city=city, country=country)
 
     async def _get_location_data_from_cache_or_api(self, city: str, country: str):
@@ -140,4 +141,26 @@ class PlaceService:
         )
         if not place:
             raise ValueError(f'Place with ID {place_id} not found.')
+        return PlaceGet.model_validate(place)
+
+    async def update_place_by_id(self, place_id, user_id, place_data: PlaceUpdate):
+        """
+        Updates the place by ID, ensuring that city and country
+        are properly formatted and validated.
+        """
+
+        # Format the city and country before validation
+        formatted_city, formatted_country = self._format_location(
+            city=place_data.city, country=place_data.country
+        )
+        # Validate the city and country
+        await self._validate_location(city=formatted_city, country=formatted_country)
+
+        place = await self.place_repository.update_place(
+            place_id=place_id, user_id=user_id, place_data=place_data
+        )
+        if not place:
+            raise ValueError(
+                f'Place with ID {place_id} not found or is not owned by user.'
+            )
         return PlaceGet.model_validate(place)

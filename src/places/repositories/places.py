@@ -6,8 +6,8 @@ from config.database import get_db
 from fastapi import Depends
 from models import Place
 from places.schemas.filters import PlaceFilter
-from places.schemas.places import PlaceCreate
-from sqlalchemy import select
+from places.schemas.places import PlaceCreate, PlaceUpdate
+from sqlalchemy import select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 
@@ -64,3 +64,19 @@ class PlaceRepository:
         )
         result = await self.db_session.execute(stmt)
         return result.scalars().first()
+
+    async def update_place(
+        self, place_id: int, user_id: int, place_data: PlaceUpdate
+    ) -> Optional[Place]:
+        stmt = (
+            update(Place)
+            .where(Place.id == place_id, Place.user_id == user_id)
+            .values(**place_data.model_dump())
+            .execution_options(synchronize_session='fetch')
+        )
+        result = await self.db_session.execute(stmt)
+        await self.db_session.commit()
+
+        if result.rowcount == 0:
+            return None
+        return await self.get_place_by_id(place_id=place_id, user_id=user_id)

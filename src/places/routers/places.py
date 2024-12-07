@@ -14,7 +14,7 @@ from places.exceptions import (
     PlaceAlreadyExistsError,
 )
 from places.schemas.filters import PlaceFilter
-from places.schemas.places import PlaceCreate, PlaceGet
+from places.schemas.places import PlaceCreate, PlaceGet, PlaceUpdate
 from places.services.places import PlaceService
 from settings import get_settings
 from starlette import status
@@ -117,4 +117,40 @@ async def get_place_by_id(
         logger.error(f'Unexpected error: {e}', exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Internal error'
+        )
+
+
+@router.put(
+    '/{place_id}',
+    status_code=status.HTTP_201_CREATED,
+    response_model=PlaceGet,
+    summary='Update a a specific place by ID',
+)
+async def update_place_by_id(
+    place_data: Annotated[PlaceUpdate, Body(...)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    place_service: Annotated[PlaceService, Depends(PlaceService)],
+    place_id: int,
+):
+    try:
+        updated_place = await place_service.update_place_by_id(
+            place_id=place_id, user_id=current_user.id, place_data=place_data
+        )
+        return updated_place
+
+    except ValueError as e:
+        logger.error(f'Value error: {repr(e)}')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    except LocationValidationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    except Exception as e:
+        logger.error(f'Unexpected error: {e}', exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='Internal error',
         )
