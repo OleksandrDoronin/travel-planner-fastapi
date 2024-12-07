@@ -8,6 +8,11 @@ from fastapi.params import Depends
 from fastapi_filter import FilterDepends
 from models import User
 from pagination import PaginationParams
+from places.exceptions import (
+    GeoServiceError,
+    LocationValidationError,
+    PlaceAlreadyExistsError,
+)
 from places.schemas.filters import PlaceFilter
 from places.schemas.places import PlaceCreate, PlaceGet
 from places.services.places import PlaceService
@@ -37,20 +42,23 @@ async def create_place(
         )
         return place
 
-    except ValueError as e:
-        logger.error(f'Value error: {repr(e)}')
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-    except RuntimeError as e:
-        logger.error(f'RuntimeError: {repr(e)}')
+    except (PlaceAlreadyExistsError, LocationValidationError) as e:
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=str(e),
+        )
+
+    except GeoServiceError as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=str(e),
         )
 
     except Exception as e:
         logger.error(f'Unexpected error: {e}', exc_info=True)
         raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Internal error'
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='Internal error',
         )
 
 

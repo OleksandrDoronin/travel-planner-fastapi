@@ -1,6 +1,7 @@
 import logging
 
 import httpx
+from places.exceptions import GeoServiceError
 from settings import get_settings
 
 
@@ -10,7 +11,7 @@ logger = logging.getLogger('travel_planner_app')
 
 class GeoRepository:
     @staticmethod
-    async def validate_location(city: str, country: str) -> dict:
+    async def get_location_data(city: str, country: str) -> dict:
         """
         Checks whether the location specified by the city and country exists
         using OpenCage API.
@@ -28,15 +29,13 @@ class GeoRepository:
             return data['results'][0]
 
         except httpx.HTTPStatusError as e:
-            logger.error(f'HTTP error with OpenCage API: {str(e)}')
-            raise RuntimeError('Service error. Please try again later.')
+            logger.error(f'HTTP error for {city}, {country}: {e}')
+            raise GeoServiceError()
 
         except httpx.RequestError as e:
-            logger.error(f'Request error: {str(e)}')
-            raise RuntimeError('Service unavailable. Please try again later.')
+            logger.error(f'Request error for {city}, {country}: {e}')
+            raise GeoServiceError()
 
         except Exception as e:
-            logger.critical(
-                f'Unexpected error in GeoRepository: {str(e)}', exc_info=True
-            )
-            raise RuntimeError('An unexpected error occurred. Please contact support.')
+            logger.error(f'Unexpected error for {city}, {country}: {e}', exc_info=True)
+            raise GeoServiceError()

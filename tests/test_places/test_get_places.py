@@ -79,4 +79,6 @@ async def test_get_places_by_filter_non_existent(
 
     url = 'api/v1/places/?cities=test&place_type=no'
     response = await async_client.get(url, headers={'Authorization': f'Bearer {token}'})
-    assert response.status_code == 404
+    assert response.status_code == 200
+    data = response.json()
+    assert data == []

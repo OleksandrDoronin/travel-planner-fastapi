@@ -2,6 +2,7 @@ import logging
 from typing import Annotated
 
 from fastapi import Depends
+from places.exceptions import LocationValidationError, PlaceAlreadyExistsError
 from places.repositories.geo_names import GeoRepository
 from places.repositories.places import PlaceRepository
 from places.schemas.filters import PlaceFilter
@@ -64,9 +65,10 @@ class PlaceService:
             visit_date=place_data.visit_date,
         )
         if existing_place:
-            raise ValueError(
-                f'The place "{place_data.place_name}" in city "{formatted_city}" '
-                f'with type "{place_data.place_type}" already exists for this user.'
+            raise PlaceAlreadyExistsError(
+                place_name=place_data.place_name,
+                city=formatted_city,
+                place_type=place_data.place_type,
             )
 
     async def _validate_location(self, city: str, country: str) -> None:
@@ -77,11 +79,8 @@ class PlaceService:
         location_data = await self._get_location_data_from_cache_or_api(
             city=city, country=country
         )
-        components = location_data.get('components', {})
-
-        if not self._is_location_valid(components, city, country):
-            logger.error(f'Location mismatch for {city}, {country}: {components}')
-            raise ValueError(f'Location mismatch: {city}, {country}')
+        if not location_data:
+            raise LocationValidationError(city=city, country=country)
 
     async def _get_location_data_from_cache_or_api(self, city: str, country: str):
         """
@@ -99,11 +98,11 @@ class PlaceService:
         if cached_data:
             return cached_data
 
-        location_data = await self.geo_repository.validate_location(
+        location_data = await self.geo_repository.get_location_data(
             city=city, country=country
         )
         if not location_data:
-            raise ValueError(f'Invalid location: {city}, {country}')
+            raise LocationValidationError(city=city, country=country)
 
         # Store the data in the cache
         await self.cache_service.set_cache(key=cache_key, value=location_data)
@@ -133,8 +132,6 @@ class PlaceService:
         places = await self.place_repository.get_places_by_user(
             user_id=user_id, filters=filters, offset=offset, limit=limit
         )
-        if not places:
-            raise ValueError('No places found for the given user.')
         return [PlaceGet.model_validate(place) for place in places]
 
     async def get_place_by_id(self, place_id: int, user_id: int) -> PlaceGet:
