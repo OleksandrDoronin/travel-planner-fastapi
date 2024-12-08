@@ -154,3 +154,30 @@ async def update_place_by_id(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail='Internal error',
         )
+
+
+@router.delete(
+    '/{place_id}',
+    status_code=status.HTTP_204_NO_CONTENT,
+    summary='Delete place by id',
+)
+async def delete_place_by_id(
+    place_service: Annotated[PlaceService, Depends(PlaceService)],
+    current_user: Annotated[User, Depends(get_current_user)],
+    place_id: int,
+):
+    try:
+        await place_service.delete_place_by_id(
+            place_id=place_id, user_id=current_user.id
+        )
+
+    except ValueError as e:
+        logger.error(f'Value error: {repr(e)}')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
+    except Exception as e:
+        logger.error(f'Unexpected error: {e}', exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail='Internal error',
+        )
