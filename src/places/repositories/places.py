@@ -79,10 +79,10 @@ class PlaceRepository:
 
         if result.rowcount == 0:
             return None
-        return await self.get_place_by_id(place_id=place_id, user_id=user_id)
+        return await self.db_session.get(Place, place_id)
 
     async def delete(self, place_id: int, user_id: int) -> bool:
-        stmt = delete(Place).where((Place.id == place_id) & (Place.user_id == user_id))
+        stmt = delete(Place).where(Place.id == place_id, Place.user_id == user_id)
         result = await self.db_session.execute(stmt)
         if result.rowcount == 0:
             return False

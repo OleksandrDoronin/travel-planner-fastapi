@@ -3,7 +3,7 @@ from typing import Annotated
 
 from auth.dependencies import get_async_client
 from fastapi import Depends
-from httpx import AsyncClient, HTTPStatusError
+from httpx import AsyncClient
 from settings import Settings, get_settings
 
 
@@ -34,29 +34,11 @@ class GoogleOAuthRepository:
         return await self._get(url=self.settings.GOOGLE_USERINFO_URL, params=params)
 
     async def _post(self, url: str, data: dict) -> dict:
-        try:
-            response = await self.client.post(url, data=data)
-            response.raise_for_status()
-            return response.json()
-        except HTTPStatusError as e:
-            logger.error(
-                f'HTTP error {e.response.status_code} when accessing {url}: {repr(e)}'
-            )
-            raise ValueError(f'Failed to fetch data from {url}')
-        except Exception as e:
-            logger.error(f'Unexpected error fetching data from {url}: {repr(e)}')
-            raise ValueError('Unexpected error occurred')
+        response = await self.client.post(url, data=data)
+        response.raise_for_status()
+        return response.json()
 
     async def _get(self, url: str, params: dict) -> dict:
-        try:
-            response = await self.client.get(url, params=params)
-            response.raise_for_status()
-            return response.json()
-        except HTTPStatusError as e:
-            logger.error(
-                f'HTTP error {e.response.status_code} when accessing {url}: {repr(e)}'
-            )
-            raise ValueError(f'Failed to fetch data from {url}')
-        except Exception as e:
-            logger.error(f'Unexpected error fetching data from {url}: {repr(e)}')
-            raise ValueError('Unexpected error occurred')
+        response = await self.client.get(url, params=params)
+        response.raise_for_status()
+        return response.json()

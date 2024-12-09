@@ -55,49 +55,39 @@ class GoogleAuthService:
         and connects the account.
         """
 
-        if not code or not redirect_uri or not state:
-            raise ValueError(
-                'Authorization code, redirect URI, and state are required.'
-            )
+        # Check that all necessary parameters are present
+        await self.validate_required_params(
+            code=code, redirect_uri=redirect_uri, state=state
+        )
 
-        if session_state != state:
-            raise ValueError('Invalid state parameter.')
+        # Check that the state from the session matches the one sent
+        await self.validate_state(session_state=session_state, state=state)
 
-        try:
-            # Fetch tokens and user info
-            token_data = await self._fetch_google_tokens(
-                code=code, redirect_uri=redirect_uri
-            )
-            if 'access_token' not in token_data:
-                logger.error('No access token received from Google.')
-                raise ValueError('Google did not return an access token.')
+        # Fetch tokens and user info
+        token_data = await self._fetch_google_tokens(
+            code=code, redirect_uri=redirect_uri
+        )
 
-            user_info = await self._fetch_google_user_info(
-                access_token=token_data['access_token']
-            )
+        # Check that the received data contains an access token
+        await self.validate_access_token(token_data=token_data)
 
-            # Map to internal user model and create or fetch user
-            user = map_to_user(user=user_info)
-            user = await self.create_or_get_user(user=user)
+        # Get user information from Google using an access token
+        user_info = await self._fetch_google_user_info(
+            access_token=token_data['access_token']
+        )
 
-            # Create or connect social account
-            account = self._map_social_account(
-                user_info=user_info, token_data=token_data, user_id=user.id
-            )
-            await self.get_or_connect_accounts(account=account)
+        # Map to internal user model and create or fetch user
+        user = map_to_user(user=user_info)
+        user = await self.create_or_get_user(user=user)
 
-            # Prepare and return response
-            return await self._prepare_callback_response(user=user)
+        # Create or connect social account
+        account = self._map_social_account(
+            user_info=user_info, token_data=token_data, user_id=user.id
+        )
+        await self.get_or_connect_accounts(account=account)
 
-        except ValueError as e:
-            logger.error(f'Error handling Google callback: {repr(e)}')
-            raise
-
-        except Exception as e:
-            logger.error(
-                'An error occurred while handling Google callback: %s', repr(e)
-            )
-            raise
+        # Prepare and return response
+        return await self._prepare_callback_response(user=user)
 
     async def create_or_get_user(self, user: UserBase) -> UserBase:
         """
@@ -176,6 +166,26 @@ class GoogleAuthService:
             refresh_token=refresh_token,
         )
 
+    @staticmethod
+    async def validate_required_params(code, redirect_uri, state):
+        """Validate that the authorization code, redirect URI, and state are present."""
+        if not code or not redirect_uri or not state:
+            raise ValueError(
+                'Authorization code, redirect URI, and state are required.'
+            )
+
+    @staticmethod
+    async def validate_state(session_state, state):
+        """Validate that the state matches."""
+        if session_state != state:
+            raise ValueError('Invalid state parameter.')
+
+    @staticmethod
+    async def validate_access_token(token_data):
+        """Validate that the token data contains an access token."""
+        if 'access_token' not in token_data:
+            raise ValueError('Google did not return an access token.')
+
 
 class GoogleOAuthUrlGenerator:
     def __init__(self, settings: Annotated[Settings, Depends(get_settings)]):
@@ -183,13 +193,11 @@ class GoogleOAuthUrlGenerator:
 
     def generate_auth_url(self, redirect_uri: str) -> tuple[GoogleLoginResponse, str]:
         """Generate the Google OAuth URL and manage the state."""
-        try:
-            state = self._generate_state()
-            google_auth_url = self._get_google_auth_url(redirect_uri, state)
-            return GoogleLoginResponse(url=google_auth_url), state
-        except ValueError as e:
-            logger.error(f'Error generating Google OAuth URL: {repr(e)}')
+        state = self._generate_state()
+        google_auth_url = self._get_google_auth_url(redirect_uri, state)
+        if not google_auth_url:
             raise ValueError('Failed to generate Google OAuth URL')
+        return GoogleLoginResponse(url=google_auth_url), state
 
     @staticmethod
     def _generate_state() -> str:

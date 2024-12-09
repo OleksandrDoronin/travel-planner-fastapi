@@ -22,21 +22,16 @@ class UserService:
         self.social_repository = social_repository
 
     async def get_user_by_id(self, user_id: int) -> ShowUser:
-        try:
-            user = await self.user_repository.get_user_by_id(user_id=user_id)
+        user = await self.user_repository.get_user_by_id(user_id=user_id)
 
-            if not user:
-                raise ValueError('User not found')
+        if not user:
+            raise ValueError('User not found')
 
-            social_accounts = (
-                await self.social_repository.get_social_accounts_for_user_response(
-                    user_id=user.id
-                )
+        social_accounts = (
+            await self.social_repository.get_social_accounts_for_user_response(
+                user_id=user.id
             )
-        except Exception as e:
-            logger.error(f'Database error: {str(e)}')
-            raise
+        )
 
         user_response = ShowUser(**user.model_dump(), social_accounts=social_accounts)
-
         return user_response

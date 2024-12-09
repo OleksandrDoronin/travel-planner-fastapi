@@ -14,6 +14,7 @@ from auth.services.google_oauth import (
 )
 from auth.services.token import TokenService
 from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+from httpx import HTTPStatusError, RequestError
 from jose import JWTError
 from pydantic import HttpUrl
 from settings import get_settings
@@ -47,14 +48,8 @@ async def google_login(
         return google_auth_response
 
     except ValueError as e:
+        logger.error(f'Error generating Google OAuth URL: {repr(e)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-    except Exception as e:
-        logger.critical(f'Unexpected error: {repr(e)}', exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Internal server error',
-        )
 
 
 @router.get(
@@ -85,12 +80,23 @@ async def google_callback(
             session_state=session_state,
         )
         return callback_response
+
     except ValueError as e:
+        logger.error(f'Error in Google OAuth callback: {str(e)}')
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-    except Exception:
+
+    except HTTPStatusError as e:
+        logger.error(f'HTTP error when processing Google OAuth callback: {repr(e)}')
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Internal server error',
+            detail=f'Failed to fetch data from Google: {repr(e)}',
+        )
+
+    except RequestError as e:
+        logger.error(f'Network error when processing Google OAuth callback: {repr(e)}')
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail='Network error occurred while fetching data from Google',
         )
 
 
@@ -112,6 +118,7 @@ async def logout(
         )
         await token_service.blacklist_token(token=token_refresh_request.refresh_token)
         return {'detail': 'Successfully logged out.'}
+
     except JWTError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
 
@@ -136,9 +143,6 @@ async def refresh_token(
 
     except ValueError as e:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+
     except JWTError as e:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=str(e)
-        )

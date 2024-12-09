@@ -63,28 +63,24 @@ class TokenService:
 
     def validate_refresh_token(self, refresh_token: str) -> dict:
         """Validates the refresh token and returns the payload if valid."""
-        try:
-            payload = jwt.decode(
-                refresh_token,
-                self.settings.JWT_SECRET_KEY,
-                algorithms=[self.settings.ALGORITHM],
-            )
-            exp = payload.get('exp')
 
-            if exp is None or datetime.now(timezone.utc) >= datetime.fromtimestamp(
-                exp, tz=timezone.utc
-            ):
-                raise JWTError('Refresh token has expired.')
+        payload = jwt.decode(
+            refresh_token,
+            self.settings.JWT_SECRET_KEY,
+            algorithms=[self.settings.ALGORITHM],
+        )
+        exp = payload.get('exp')
 
-            user_id = payload.get('sub')
-            if user_id is None:
-                raise JWTError('Invalid refresh token: User ID not found in payload.')
+        if exp is None or datetime.now(timezone.utc) >= datetime.fromtimestamp(
+            exp, tz=timezone.utc
+        ):
+            raise JWTError('Refresh token has expired.')
 
-            return payload
+        user_id = payload.get('sub')
+        if user_id is None:
+            raise JWTError('Invalid refresh token: User ID not found in payload.')
 
-        except JWTError as e:
-            logger.error(f'JWT error: {str(e)}')
-            raise
+        return payload
 
     def get_token_expiration(self, token: str) -> Optional[datetime]:
         """Retrieves the expiration time from a token (exp)."""
@@ -124,21 +120,22 @@ class TokenService:
         if await self.token_repository.is_token_blacklisted(token=refresh_token):
             raise JWTError('Invalid token')
 
+        # Extract the user ID from the refresh token
         user_id = self.get_user_id_from_refresh_token(refresh_token=refresh_token)
-        try:
-            user = await self.user_repository.get_user_by_id(user_id=user_id)
-            if not user:
-                raise ValueError('User not found')
-            new_access_token = self.create_access_token(user_id=user.id)
-            new_refresh_token = self.create_refresh_token(user_id=user.id)
 
-            # Add the old refresh token to the blacklist
-            await self.blacklist_token(token=refresh_token)
+        # Retrieve the user from the repository using the user ID
+        user = await self.user_repository.get_user_by_id(user_id=user_id)
+        if not user:
+            raise ValueError('User not found')
 
-            return TokenRefreshResponse(
-                access_token=new_access_token, refresh_token=new_refresh_token
-            )
+        # Generate a new access token for the user
+        new_access_token = self.create_access_token(user_id=user.id)
+        # Generate a new refresh token for the user
+        new_refresh_token = self.create_refresh_token(user_id=user.id)
 
-        except Exception as e:
-            logger.error('Unexpected error retrieving user: %s', repr(e))
-            raise ValueError('An unexpected error occurred while retrieving user')
+        # Add the old refresh token to the blacklist
+        await self.blacklist_token(token=refresh_token)
+
+        return TokenRefreshResponse(
+            access_token=new_access_token, refresh_token=new_refresh_token
+        )

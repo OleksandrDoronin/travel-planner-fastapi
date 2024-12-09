@@ -143,7 +143,9 @@ class PlaceService:
             raise ValueError(f'Place with ID {place_id} not found.')
         return PlaceGet.model_validate(place)
 
-    async def update_place_by_id(self, place_id, user_id, place_data: PlaceUpdate):
+    async def update_place_by_id(
+        self, place_id: int, user_id: int, place_data: PlaceUpdate
+    ):
         """
         Updates the place by ID, ensuring that city and country
         are properly formatted and validated.
@@ -168,4 +170,6 @@ class PlaceService:
     async def delete_place_by_id(self, place_id: int, user_id: int) -> None:
         deleted = await self.place_repository.delete(place_id=place_id, user_id=user_id)
         if not deleted:
-            raise ValueError('Place or user not found')
+            raise ValueError(
+                f'Place with ID {place_id} not found or is not owned by user.'
+            )

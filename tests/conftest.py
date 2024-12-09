@@ -86,6 +86,19 @@ async def mock_social_account(async_session: AsyncSession, mock_user: User):
 
 
 @pytest.fixture(scope='function')
+async def another_user(async_session: AsyncSession):
+    test_user = User(
+        full_name='Alex',
+        email='alex@mail.com',
+        profile_picture=None,
+    )
+    async_session.add(test_user)
+    await async_session.commit()
+    await async_session.refresh(test_user)
+    return test_user
+
+
+@pytest.fixture(scope='function')
 async def mock_place(async_session: AsyncSession, mock_user: User):
     test_place = Place(
         place_name='Test place',

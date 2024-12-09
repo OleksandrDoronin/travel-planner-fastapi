@@ -54,13 +54,6 @@ async def create_place(
             detail=str(e),
         )
 
-    except Exception as e:
-        logger.error(f'Unexpected error: {e}', exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Internal error',
-        )
-
 
 @router.get(
     '/',
@@ -86,12 +79,6 @@ async def get_places(
         logger.error(f'Value error: {repr(e)}')
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
 
-    except Exception as e:
-        logger.error(f'Unexpected error: {e}', exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Internal error'
-        )
-
 
 @router.get(
     '/{place_id}',
@@ -112,12 +99,6 @@ async def get_place_by_id(
     except ValueError as e:
         logger.error(f'Value error: {repr(e)}')
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-    except Exception as e:
-        logger.error(f'Unexpected error: {e}', exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail='Internal error'
-        )
 
 
 @router.put(
@@ -148,13 +129,6 @@ async def update_place_by_id(
             detail=str(e),
         )
 
-    except Exception as e:
-        logger.error(f'Unexpected error: {e}', exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Internal error',
-        )
-
 
 @router.delete(
     '/{place_id}',
@@ -174,10 +148,3 @@ async def delete_place_by_id(
     except ValueError as e:
         logger.error(f'Value error: {repr(e)}')
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
-
-    except Exception as e:
-        logger.error(f'Unexpected error: {e}', exc_info=True)
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='Internal error',
-        )
