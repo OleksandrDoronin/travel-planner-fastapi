@@ -80,6 +80,24 @@ async def test_update_place_by_id_invalid_city_and_country(
     assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
+@pytest.mark.asyncio
+async def test_update_place_with_invalid_token(async_client: AsyncClient, mock_place):
+    invalid_token = 'invalid.token.here'
+    url = f'api/v1/places/{mock_place.id}'
+    updated_place_data = {
+        'place_name': 'Updated Place',
+        'city': 'Paris',
+        'country': 'France',
+        'rating': 4,
+    }
+    response = await async_client.put(
+        url,
+        headers={'Authorization': f'Bearer {invalid_token}'},
+        json=updated_place_data,
+    )
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED
+
+
 async def test_delete_place_by_id(async_client: AsyncClient, mock_user, mock_place):
     token = create_test_token(user_id=mock_user.id)
     url = f'api/v1/places/{mock_place.id}'
@@ -112,5 +130,4 @@ async def test_delete_place_other_user(
     response = await async_client.delete(
         url, headers={'Authorization': f'Bearer {token}'}
     )
-
     assert response.status_code == status.HTTP_404_NOT_FOUND

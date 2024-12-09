@@ -1,7 +1,7 @@
 import logging
 from typing import Annotated, List
 
-from auth.security import get_current_user
+from auth.current_user import get_current_user
 from dependencies import get_pagination_params
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Depends

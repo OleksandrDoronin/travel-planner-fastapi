@@ -7,7 +7,7 @@ from auth.schemas.auth_schemas import (
     TokenRefreshRequest,
     TokenRefreshResponse,
 )
-from auth.security import get_current_user
+from auth.current_user import get_current_user
 from auth.services.google_oauth import (
     GoogleAuthService,
     GoogleOAuthUrlGenerator,
