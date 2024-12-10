@@ -9,9 +9,11 @@ services:
       context: .
       dockerfile: Dockerfile
     env_file:
-      - .env.production
+      - .env.development
     depends_on:
       postgres-db:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     restart: always
 
@@ -24,11 +26,28 @@ services:
       timeout: 5s
       retries: 5
     env_file:
-      - .env.production
+      - .env.development
     volumes:
       - pg_data:/var/lib/postgresql/data
     ports:
       - "5433:5432"
 
+  redis:
+    image: redis:6.2
+    container_name: travel-planner-redis
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    env_file:
+      - .env.development
+    ports:
+      - "6380:6379"
+    volumes:
+      - redis_data:/data
+    restart: always
+
 volumes:
     pg_data:
+    redis_data:

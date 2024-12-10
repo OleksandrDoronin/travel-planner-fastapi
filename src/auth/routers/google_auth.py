@@ -1,13 +1,13 @@
 import logging
 from typing import Annotated
 
+from auth.current_user import get_current_user
 from auth.schemas.auth_schemas import (
     GoogleCallBackResponse,
     GoogleLoginResponse,
     TokenRefreshRequest,
     TokenRefreshResponse,
 )
-from auth.current_user import get_current_user
 from auth.services.google_oauth import (
     GoogleAuthService,
     GoogleOAuthUrlGenerator,

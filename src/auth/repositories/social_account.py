@@ -3,7 +3,7 @@ from typing import Annotated
 from auth.schemas.user_schemas import SocialAccountLink, SocialAccountResponse
 from config.database import get_db
 from fastapi import Depends
-from models.users import SocialAccount
+from models.social_account import SocialAccount
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
