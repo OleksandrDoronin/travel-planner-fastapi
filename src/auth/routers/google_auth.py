@@ -13,7 +13,7 @@ from auth.services.google_oauth import (
     GoogleOAuthUrlGenerator,
 )
 from auth.services.token import TokenService
-from fastapi import APIRouter, Body, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
 from httpx import HTTPStatusError, RequestError
 from jose import JWTError
 from pydantic import HttpUrl
@@ -32,7 +32,6 @@ settings = get_settings()
     summary='Generate Google OAuth Login URL',
 )
 async def google_login(
-    request: Request,
     google_oauth_url_generator: Annotated[
         GoogleOAuthUrlGenerator, Depends(GoogleOAuthUrlGenerator)
     ],
@@ -41,10 +40,12 @@ async def google_login(
     """Generate Google OAuth URL and return it along with state."""
 
     try:
-        google_auth_response, state = google_oauth_url_generator.generate_auth_url(
+        (
+            google_auth_response,
+            state,
+        ) = await google_oauth_url_generator.generate_auth_url(
             redirect_uri=redirect_uri
         )
-        request.session['state'] = state
         return google_auth_response
 
     except ValueError as e:
@@ -58,7 +59,6 @@ async def google_login(
     status_code=status.HTTP_200_OK,
 )
 async def google_callback(
-    request: Request,
     google_auth_service: Annotated[GoogleAuthService, Depends(GoogleAuthService)],
     redirect_uri: str = Query(settings.GOOGLE_REDIRECT_URI, description='Redirect uri'),
     code: str = Query(
@@ -68,16 +68,12 @@ async def google_callback(
 ) -> GoogleCallBackResponse:
     """Handle the callback from Google OAuth after authorization."""
 
-    # Retrieve session state for CSRF protection
-    session_state = request.session.get('state')
-
     try:
         # Pass the received parameters to the service for processing
         callback_response = await google_auth_service.handle_google_callback(
             code=code,
             redirect_uri=redirect_uri,
             state=state,
-            session_state=session_state,
         )
         return callback_response
 

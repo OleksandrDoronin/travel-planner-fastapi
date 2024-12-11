@@ -66,7 +66,6 @@ async def mock_user(async_session: AsyncSession):
     )
     async_session.add(test_user)
     await async_session.commit()
-    await async_session.refresh(test_user)
     return test_user
 
 
@@ -81,7 +80,6 @@ async def mock_social_account(async_session: AsyncSession, mock_user: User):
     )
     async_session.add(social_account)
     await async_session.commit()
-    await async_session.refresh(social_account)
     return social_account
 
 
@@ -94,7 +92,6 @@ async def another_user(async_session: AsyncSession):
     )
     async_session.add(test_user)
     await async_session.commit()
-    await async_session.refresh(test_user)
     return test_user
 
 
@@ -114,5 +111,4 @@ async def mock_place(async_session: AsyncSession, mock_user: User):
     )
     async_session.add(test_place)
     await async_session.commit()
-    await async_session.refresh(test_place)
     return test_place

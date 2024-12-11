@@ -5,7 +5,7 @@ from httpx import AsyncClient
 from settings import get_settings
 from starlette import status
 
-from tests.utils import create_test_token, extract_session_state
+from tests.utils import create_test_token
 
 
 settings = get_settings()
@@ -28,13 +28,20 @@ async def test_google_login(async_client: AsyncClient):
 @pytest.mark.asyncio
 @patch('src.auth.services.google_oauth.GoogleOAuthRepository.fetch_token')
 @patch('src.auth.services.google_oauth.GoogleOAuthRepository.fetch_user_info')
+@patch('src.auth.services.google_oauth.CacheService.get_cache')
+@patch('src.auth.services.google_oauth.CacheService.set_cache')
 async def test_google_callback_success(
-    mock_fetch_user_info, mock_fetch_token, async_client: AsyncClient
+    mock_set_cache,  # noqa
+    mock_get_cache,
+    mock_fetch_user_info,
+    mock_fetch_token,
+    async_client: AsyncClient,
 ):
     """
-    Test successful Google OAuth callback handling using GoogleOAuthRepository.
+    Test successful Google OAuth callback handling with state retrieved from cache.
     """
-    # Mock responses
+
+    # Mock responses for token and user info
     mock_fetch_token.return_value = {
         'access_token': 'valid_access_token',
         'refresh_token': 'valid_refresh_token',
@@ -46,37 +53,45 @@ async def test_google_callback_success(
         'picture': 'https://example.com/avatar.png',
     }
 
-    # Input parameters
+    # Define constants for URLs and test data
     redirect_uri = settings.GOOGLE_REDIRECT_URI
     test_code = 'mock_test_code'
     login_url = 'api/v1/auth/google/login/'
     callback_url = 'api/v1/auth/google/callback/'
+    generated_state = 'real_generated_state'
 
-    # Simulate a GET request to the login endpoint to retrieve session cookie
+    # Step 1: Simulate a GET request to the login endpoint
     login_response = await async_client.get(
         login_url, params={'redirect_uri': redirect_uri}
     )
     assert login_response.status_code == status.HTTP_200_OK
 
-    # Extract session state from the cookie
-    session_cookie = login_response.cookies.get('session')
-    session_state = extract_session_state(session_cookie)
+    # Step 2: Mock the return value from the cache
+    mock_get_cache.return_value = {'state': generated_state}
 
-    # Simulate a GET request to the callback endpoint with the session state
+    # Step 3: Simulate a GET request to the callback endpoint with state from cache
     response = await async_client.get(
         callback_url,
-        params={'code': test_code, 'state': session_state},
+        params={'code': test_code, 'state': generated_state},
     )
 
+    # Step 4: Validate the response
     assert response.status_code == status.HTTP_200_OK
     response_data = response.json()
 
-    assert 'user' in response_data
-    assert response_data['user']['email'] == 'test_vasya@mail.com'
-    assert response_data['user']['full_name'] == 'Vasya Lupin'
-    assert response_data['user']['profile_picture'] == 'https://example.com/avatar.png'
+    # Assertions for user data
+    user_data = response_data.get('user', {})
+    assert user_data
+    assert user_data['email'] == 'test_vasya@mail.com'
+    assert user_data['full_name'] == 'Vasya Lupin'
+    assert user_data['profile_picture'] == 'https://example.com/avatar.png'
+
+    # Assertions for token data
     assert 'access_token' in response_data
     assert 'refresh_token' in response_data
+
+    # Ensure that get_cache was called with the correct key
+    mock_get_cache.assert_called_once_with(f'google_oauth_state_{generated_state}')
 
 
 @pytest.mark.asyncio

@@ -17,6 +17,7 @@ from auth.services.token import TokenService
 from auth.utils import generate_random_state
 from cryptography.fernet import Fernet
 from fastapi import Depends
+from services.cache import CacheService
 from settings import Settings, get_settings
 
 
@@ -39,6 +40,7 @@ class GoogleAuthService:
             GoogleOAuthRepository, Depends(GoogleOAuthRepository)
         ],
         cypher: Annotated[Fernet, Depends(get_cypher)],
+        cache_service: Annotated[CacheService, Depends(CacheService)],
     ):
         self._service = 'google'
         self.user_repository = user_repository
@@ -46,9 +48,10 @@ class GoogleAuthService:
         self.google_oauth_repo = google_oauth_repo
         self.token_service = token_service
         self.cypher = cypher
+        self.cache_service = cache_service
 
     async def handle_google_callback(
-        self, code: str, redirect_uri: str, state: str, session_state: str
+        self, code: str, redirect_uri: str, state: str
     ) -> GoogleCallBackResponse:
         """
         Handles the Google OAuth callback, fetches tokens, user info,
@@ -60,16 +63,13 @@ class GoogleAuthService:
             code=code, redirect_uri=redirect_uri, state=state
         )
 
-        # Check that the state from the session matches the one sent
-        await self.validate_state(session_state=session_state, state=state)
+        # Check that the state from the cache matches the one sent
+        await self.verify_state(state=state)
 
         # Fetch tokens and user info
-        token_data = await self._fetch_google_tokens(
+        token_data = await self._fetch_and_validate_google_tokens(
             code=code, redirect_uri=redirect_uri
         )
-
-        # Check that the received data contains an access token
-        await self.validate_access_token(token_data=token_data)
 
         # Get user information from Google using an access token
         user_info = await self._fetch_google_user_info(
@@ -115,13 +115,21 @@ class GoogleAuthService:
             )
         return social_account
 
-    async def _fetch_google_tokens(self, code: str, redirect_uri: str):
+    async def _fetch_and_validate_google_tokens(
+        self, code: str, redirect_uri: str
+    ) -> dict:
         """
-        Fetches Google OAuth tokens using the provided authorization code.
+        Fetch tokens from Google and validate the access token.
         """
-        return await self.google_oauth_repo.fetch_token(
+        token_data = await self.google_oauth_repo.fetch_token(
             code=code, redirect_uri=redirect_uri
         )
+
+        # Validate access token
+        if 'access_token' not in token_data:
+            raise ValueError('Access token not found in response')
+
+        return token_data
 
     async def _fetch_google_user_info(self, access_token: str):
         """
@@ -166,6 +174,12 @@ class GoogleAuthService:
             refresh_token=refresh_token,
         )
 
+    async def verify_state(self, state: str):
+        """Validate that the state matches."""
+        cached_state = await self.cache_service.get_cache(f'google_oauth_state_{state}')
+        if cached_state is None or cached_state.get('state') != state:
+            raise ValueError('Invalid state parameter.')
+
     @staticmethod
     async def validate_required_params(code, redirect_uri, state):
         """Validate that the authorization code, redirect URI, and state are present."""
@@ -174,35 +188,39 @@ class GoogleAuthService:
                 'Authorization code, redirect URI, and state are required.'
             )
 
-    @staticmethod
-    async def validate_state(session_state, state):
-        """Validate that the state matches."""
-        if session_state != state:
-            raise ValueError('Invalid state parameter.')
-
-    @staticmethod
-    async def validate_access_token(token_data):
-        """Validate that the token data contains an access token."""
-        if 'access_token' not in token_data:
-            raise ValueError('Google did not return an access token.')
-
 
 class GoogleOAuthUrlGenerator:
-    def __init__(self, settings: Annotated[Settings, Depends(get_settings)]):
+    def __init__(
+        self,
+        settings: Annotated[Settings, Depends(get_settings)],
+        cache_service: Annotated[CacheService, Depends(CacheService)],
+    ):
         self.settings = settings
+        self.cache_service = cache_service
 
-    def generate_auth_url(self, redirect_uri: str) -> tuple[GoogleLoginResponse, str]:
+    async def generate_auth_url(
+        self, redirect_uri: str
+    ) -> tuple[GoogleLoginResponse, str]:
         """Generate the Google OAuth URL and manage the state."""
-        state = self._generate_state()
-        google_auth_url = self._get_google_auth_url(redirect_uri, state)
+
+        # Generate and store state in cache
+        state = await self._generate_and_cache_state()
+
+        google_auth_url = self._get_google_auth_url(
+            redirect_uri=redirect_uri, state=state
+        )
         if not google_auth_url:
             raise ValueError('Failed to generate Google OAuth URL')
+
         return GoogleLoginResponse(url=google_auth_url), state
 
-    @staticmethod
-    def _generate_state() -> str:
-        """Generate a random state string."""
-        return generate_random_state()
+    async def _generate_and_cache_state(self) -> str:
+        """Generate a random state and save it to cache."""
+        state = generate_random_state()
+        await self.cache_service.set_cache(
+            f'google_oauth_state_{state}', {'state': state}, ttl=100
+        )
+        return state
 
     def _get_google_auth_url(self, redirect_uri: str, state: str) -> str:
         """Helper to generate the Google OAuth URL."""
