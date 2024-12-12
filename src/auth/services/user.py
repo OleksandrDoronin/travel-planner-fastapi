@@ -8,7 +8,7 @@ from src.auth.repositories.user import UserRepository
 from src.auth.schemas.user_schemas import ShowUser
 
 
-logger = logging.getLogger('travel_planner_app')
+logger = logging.getLogger(__name__)
 
 
 class UserService:

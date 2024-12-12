@@ -12,7 +12,7 @@ from src.auth.services.token import TokenService
 from src.auth.services.user import UserService
 
 
-logger = logging.getLogger('travel_planner_app')
+logger = logging.getLogger(__name__)
 
 
 async def get_current_user(

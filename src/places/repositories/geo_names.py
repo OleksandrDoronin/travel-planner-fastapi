@@ -7,7 +7,7 @@ from src.settings import get_settings
 
 
 settings = get_settings()
-logger = logging.getLogger('travel_planner_app')
+logger = logging.getLogger(__name__)
 
 
 class GeoRepository:

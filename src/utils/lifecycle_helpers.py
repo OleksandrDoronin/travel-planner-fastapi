@@ -8,7 +8,7 @@ from src.services.cache import CacheService
 from src.tasks.token_cleanup import remove_expired_tokens
 
 
-logger = logging.getLogger('travel_planner_app')
+logger = logging.getLogger(__name__)
 
 
 def setup_scheduler():

@@ -8,7 +8,7 @@ from src.auth.dependencies import get_async_client
 from src.settings import Settings, get_settings
 
 
-logger = logging.getLogger('travel_planner_app')
+logger = logging.getLogger(__name__)
 
 
 class GoogleOAuthRepository:

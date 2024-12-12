@@ -22,7 +22,7 @@ from src.settings import get_settings
 
 
 router = APIRouter(tags=['place'], prefix='/places')
-logger = logging.getLogger('travel_planner_app')
+logger = logging.getLogger(__name__)
 settings = get_settings()
 
 

@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.token_blacklist import TokenBlacklist
 
 
-logger = logging.getLogger('travel_planner_app')
+logger = logging.getLogger(__name__)
 
 
 async def remove_expired_tokens(db_session: AsyncSession):

@@ -14,7 +14,7 @@ from src.utils.lifecycle_helpers import (
 
 
 setup_logging()
-logger = logging.getLogger('travel_planner_app')
+logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager

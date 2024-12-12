@@ -12,7 +12,7 @@ from src.places.utils import format_title_case
 from src.services.cache import CacheService
 
 
-logger = logging.getLogger('travel_planner_app')
+logger = logging.getLogger(__name__)
 
 
 class PlaceService:
