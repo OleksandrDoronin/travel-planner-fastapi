@@ -2,7 +2,8 @@ import json
 import logging
 
 import redis.asyncio as redis
-from settings import get_settings
+
+from src.settings import get_settings
 
 
 settings = get_settings()

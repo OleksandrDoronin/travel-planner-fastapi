@@ -1,14 +1,15 @@
 import logging
 from typing import Annotated
 
-from auth.schemas.user_schemas import UserBase
-from auth.security import custom_bearer_scheme
-from auth.services.token import TokenService
-from auth.services.user import UserService
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials
 from jose import JWTError
 from starlette import status
+
+from src.auth.schemas.user_schemas import UserBase
+from src.auth.security import custom_bearer_scheme
+from src.auth.services.token import TokenService
+from src.auth.services.user import UserService
 
 
 logger = logging.getLogger('travel_planner_app')

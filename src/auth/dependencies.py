@@ -2,7 +2,8 @@ from functools import lru_cache
 
 from cryptography.fernet import Fernet
 from httpx import AsyncClient
-from settings import get_settings
+
+from src.settings import get_settings
 
 
 settings = get_settings()

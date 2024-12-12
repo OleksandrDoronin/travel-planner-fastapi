@@ -2,13 +2,14 @@ import logging
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Optional
 
-from auth.mapper import map_refresh_token
-from auth.repositories.token_blacklist import TokenBlacklistRepository
-from auth.repositories.user import UserRepository
-from auth.schemas.auth_schemas import TokenRefreshResponse
 from fastapi import Depends
 from jose import JWTError, jwt
-from settings import Settings, get_settings
+
+from src.auth.mapper import map_refresh_token
+from src.auth.repositories.token_blacklist import TokenBlacklistRepository
+from src.auth.repositories.user import UserRepository
+from src.auth.schemas.auth_schemas import TokenRefreshResponse
+from src.settings import Settings, get_settings
 
 
 logger = logging.getLogger('travel_planner_app')

@@ -2,23 +2,24 @@ import logging
 from typing import Annotated
 from urllib.parse import urlencode, urlunparse
 
-from auth.dependencies import get_cypher
-from auth.mapper import map_and_encode_tokens, map_to_user
-from auth.repositories.google_oauth import GoogleOAuthRepository
-from auth.repositories.social_account import SocialAccountRepository
-from auth.repositories.user import UserRepository
-from auth.schemas.auth_schemas import (
+from cryptography.fernet import Fernet
+from fastapi import Depends
+
+from src.auth.dependencies import get_cypher
+from src.auth.mapper import map_and_encode_tokens, map_to_user
+from src.auth.repositories.google_oauth import GoogleOAuthRepository
+from src.auth.repositories.social_account import SocialAccountRepository
+from src.auth.repositories.user import UserRepository
+from src.auth.schemas.auth_schemas import (
     GoogleAuthRequestSchema,
     GoogleCallBackResponse,
     GoogleLoginResponse,
 )
-from auth.schemas.user_schemas import SocialAccountLink, UserBase, UserResponse
-from auth.services.token import TokenService
-from auth.utils import generate_random_state
-from cryptography.fernet import Fernet
-from fastapi import Depends
-from services.cache import CacheService
-from settings import Settings, get_settings
+from src.auth.schemas.user_schemas import SocialAccountLink, UserBase, UserResponse
+from src.auth.services.token import TokenService
+from src.auth.utils import generate_random_state
+from src.services.cache import CacheService
+from src.settings import Settings, get_settings
 
 
 logger = logging.getLogger('travel_planner_app')

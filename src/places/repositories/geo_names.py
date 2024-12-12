@@ -1,8 +1,9 @@
 import logging
 
 import httpx
-from places.exceptions import GeoServiceError
-from settings import get_settings
+
+from src.places.exceptions import GeoServiceError
+from src.settings import get_settings
 
 
 settings = get_settings()

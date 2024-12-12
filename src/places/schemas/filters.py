@@ -1,8 +1,9 @@
 from typing import Optional
 
 from fastapi_filter.contrib.sqlalchemy import Filter
-from models import Place
 from pydantic import ConfigDict, Field, field_validator
+
+from src.models import Place
 
 
 class PlaceFilter(Filter):

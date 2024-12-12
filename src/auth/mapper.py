@@ -1,9 +1,10 @@
 from datetime import datetime
 
-from auth.schemas.auth_schemas import TokenBlacklistSchema
-from auth.schemas.user_schemas import SocialAccountLink, UserBase
-from auth.utils import encode_token
 from cryptography.fernet import Fernet
+
+from src.auth.schemas.auth_schemas import TokenBlacklistSchema
+from src.auth.schemas.user_schemas import SocialAccountLink, UserBase
+from src.auth.utils import encode_token
 
 
 def map_to_user(user: dict) -> UserBase:

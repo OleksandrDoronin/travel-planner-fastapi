@@ -1,9 +1,10 @@
 from datetime import date, datetime
 from typing import Optional
 
-from enums.places import PlaceRating, PlaceType
-from places.utils import check_future_date
 from pydantic import BaseModel, ConfigDict, conint, constr, field_validator
+
+from src.enums.places import PlaceRating, PlaceType
+from src.places.utils import check_future_date
 
 
 class PlaceCreate(BaseModel):

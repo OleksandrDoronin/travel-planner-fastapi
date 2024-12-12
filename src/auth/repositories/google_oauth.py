@@ -1,10 +1,11 @@
 import logging
 from typing import Annotated
 
-from auth.dependencies import get_async_client
 from fastapi import Depends
 from httpx import AsyncClient
-from settings import Settings, get_settings
+
+from src.auth.dependencies import get_async_client
+from src.settings import Settings, get_settings
 
 
 logger = logging.getLogger('travel_planner_app')

@@ -6,13 +6,14 @@ os.environ['ENVIRONMENT'] = 'test'
 from typing import AsyncGenerator
 
 import pytest
-from config.database import Base, get_db
 from httpx import ASGITransport, AsyncClient
-from main import app
-from models import Place, SocialAccount, User
-from settings import get_settings
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+
+from src.config.database import Base, get_db
+from src.main import app
+from src.models import Place, SocialAccount, User
+from src.settings import get_settings
 
 
 settings = get_settings()

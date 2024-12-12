@@ -2,13 +2,14 @@ import logging
 from datetime import date
 from typing import Annotated, Optional
 
-from config.database import get_db
 from fastapi import Depends
-from models import Place
-from places.schemas.filters import PlaceFilter
-from places.schemas.places import PlaceCreate, PlaceUpdate
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.config.database import get_db
+from src.models import Place
+from src.places.schemas.filters import PlaceFilter
+from src.places.schemas.places import PlaceCreate, PlaceUpdate
 
 
 logger = logging.getLogger('travel_planner_app')

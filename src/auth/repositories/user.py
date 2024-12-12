@@ -1,12 +1,13 @@
 from typing import Annotated, Optional
 
-from auth.schemas.user_schemas import UserBase
-from config.database import get_db
 from fastapi import Depends
-from models import User
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
+
+from src.auth.schemas.user_schemas import UserBase
+from src.config.database import get_db
+from src.models import User
 
 
 class UserRepository:

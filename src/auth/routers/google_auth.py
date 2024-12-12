@@ -1,24 +1,25 @@
 import logging
 from typing import Annotated
 
-from auth.current_user import get_current_user
-from auth.schemas.auth_schemas import (
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from httpx import HTTPStatusError, RequestError
+from jose import JWTError
+from pydantic import HttpUrl
+from starlette import status
+
+from src.auth.current_user import get_current_user
+from src.auth.schemas.auth_schemas import (
     GoogleCallBackResponse,
     GoogleLoginResponse,
     TokenRefreshRequest,
     TokenRefreshResponse,
 )
-from auth.services.google_oauth import (
+from src.auth.services.google_oauth import (
     GoogleAuthService,
     GoogleOAuthUrlGenerator,
 )
-from auth.services.token import TokenService
-from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from httpx import HTTPStatusError, RequestError
-from jose import JWTError
-from pydantic import HttpUrl
-from settings import get_settings
-from starlette import status
+from src.auth.services.token import TokenService
+from src.settings import get_settings
 
 
 router = APIRouter(tags=['auth'], prefix='/auth')

@@ -1,10 +1,11 @@
 import datetime
 from typing import TYPE_CHECKING, Optional
 
-from config.database import Base
-from enums.places import PlaceRating, PlaceType, PlannedPlaceStatus
 from sqlalchemy import DateTime, Enum, ForeignKey, Integer, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from src.config.database import Base
+from src.enums.places import PlaceRating, PlaceType, PlannedPlaceStatus
 
 
 if TYPE_CHECKING:

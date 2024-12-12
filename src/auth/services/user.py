@@ -1,10 +1,11 @@
 import logging
 from typing import Annotated
 
-from auth.repositories.social_account import SocialAccountRepository
-from auth.repositories.user import UserRepository
-from auth.schemas.user_schemas import ShowUser
 from fastapi import Depends
+
+from src.auth.repositories.social_account import SocialAccountRepository
+from src.auth.repositories.user import UserRepository
+from src.auth.schemas.user_schemas import ShowUser
 
 
 logger = logging.getLogger('travel_planner_app')

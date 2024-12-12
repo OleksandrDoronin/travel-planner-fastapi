@@ -1,7 +1,8 @@
 from datetime import datetime
 
-from auth.schemas.user_schemas import UserResponse
 from pydantic import BaseModel, ConfigDict, HttpUrl
+
+from src.auth.schemas.user_schemas import UserResponse
 
 
 class GoogleAuthRequestSchema(BaseModel):

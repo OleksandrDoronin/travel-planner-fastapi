@@ -1,8 +1,9 @@
 from typing import TYPE_CHECKING, Optional
 
-from config.database import Base
 from sqlalchemy import ForeignKey, Integer
 from sqlalchemy.orm import Mapped, mapped_column, relationship
+
+from src.config.database import Base
 
 
 if TYPE_CHECKING:

@@ -1,23 +1,24 @@
 import logging
 from typing import Annotated, List
 
-from auth.current_user import get_current_user
-from dependencies import get_pagination_params
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Depends
 from fastapi_filter import FilterDepends
-from models import User
-from pagination import PaginationParams
-from places.exceptions import (
+from starlette import status
+
+from src.auth.current_user import get_current_user
+from src.dependencies import get_pagination_params
+from src.models import User
+from src.pagination import PaginationParams
+from src.places.exceptions import (
     GeoServiceError,
     LocationValidationError,
     PlaceAlreadyExistsError,
 )
-from places.schemas.filters import PlaceFilter
-from places.schemas.places import PlaceCreate, PlaceGet, PlaceUpdate
-from places.services.places import PlaceService
-from settings import get_settings
-from starlette import status
+from src.places.schemas.filters import PlaceFilter
+from src.places.schemas.places import PlaceCreate, PlaceGet, PlaceUpdate
+from src.places.services.places import PlaceService
+from src.settings import get_settings
 
 
 router = APIRouter(tags=['place'], prefix='/places')

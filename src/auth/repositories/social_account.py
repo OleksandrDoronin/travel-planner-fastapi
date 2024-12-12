@@ -1,11 +1,12 @@
 from typing import Annotated
 
-from auth.schemas.user_schemas import SocialAccountLink, SocialAccountResponse
-from config.database import get_db
 from fastapi import Depends
-from models.social_account import SocialAccount
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.auth.schemas.user_schemas import SocialAccountLink, SocialAccountResponse
+from src.config.database import get_db
+from src.models.social_account import SocialAccount
 
 
 class SocialAccountRepository:

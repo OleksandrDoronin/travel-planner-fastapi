@@ -3,14 +3,15 @@ from contextlib import asynccontextmanager
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
-from auth.routers import google_auth, user
-from config.database import get_db
-from config.logging_config import setup_logging
 from fastapi import FastAPI
-from middleware import setup_middleware
-from places.routers import places
-from services.cache import CacheService
-from tasks.token_cleanup import remove_expired_tokens
+
+from src.auth.routers import google_auth, user
+from src.config.database import get_db
+from src.config.logging_config import setup_logging
+from src.middleware import setup_middleware
+from src.places.routers import places
+from src.services.cache import CacheService
+from src.tasks.token_cleanup import remove_expired_tokens
 
 
 setup_logging()

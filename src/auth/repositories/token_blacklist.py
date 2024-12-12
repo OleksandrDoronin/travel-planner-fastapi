@@ -1,11 +1,12 @@
 from typing import Annotated, Optional
 
-from auth.schemas.auth_schemas import TokenBlacklistSchema
-from config.database import get_db
 from fastapi import Depends
-from models import TokenBlacklist
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.auth.schemas.auth_schemas import TokenBlacklistSchema
+from src.config.database import get_db
+from src.models import TokenBlacklist
 
 
 class TokenBlacklistRepository:

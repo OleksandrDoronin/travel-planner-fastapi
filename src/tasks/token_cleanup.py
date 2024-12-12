@@ -1,9 +1,10 @@
 import logging
 from datetime import datetime, timezone
 
-from models.token_blacklist import TokenBlacklist
 from sqlalchemy import delete
 from sqlalchemy.ext.asyncio import AsyncSession
+
+from src.models.token_blacklist import TokenBlacklist
 
 
 logger = logging.getLogger('travel_planner_app')

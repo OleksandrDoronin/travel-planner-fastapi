@@ -1,5 +1,6 @@
 from fastapi import Query
-from pagination import PaginationParams
+
+from src.pagination import PaginationParams
 
 
 def get_pagination_params(

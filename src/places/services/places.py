@@ -2,13 +2,14 @@ import logging
 from typing import Annotated
 
 from fastapi import Depends
-from places.exceptions import LocationValidationError, PlaceAlreadyExistsError
-from places.repositories.geo_names import GeoRepository
-from places.repositories.places import PlaceRepository
-from places.schemas.filters import PlaceFilter
-from places.schemas.places import PlaceCreate, PlaceGet, PlaceUpdate
-from places.utils import format_title_case
-from services.cache import CacheService
+
+from src.places.exceptions import LocationValidationError, PlaceAlreadyExistsError
+from src.places.repositories.geo_names import GeoRepository
+from src.places.repositories.places import PlaceRepository
+from src.places.schemas.filters import PlaceFilter
+from src.places.schemas.places import PlaceCreate, PlaceGet, PlaceUpdate
+from src.places.utils import format_title_case
+from src.services.cache import CacheService
 
 
 logger = logging.getLogger('travel_planner_app')
