@@ -6,7 +6,7 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
-from src.config.database import Base
+from src.repositories.postgres_base import Base
 from src.models import User, SocialAccount, TokenBlacklist, Place, PlannedPlace  # noqa
 
 from src.settings import get_settings

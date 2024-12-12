@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import joinedload
 
 from src.auth.schemas.user_schemas import UserBase
-from src.config.database import get_db
+from src.dependencies import get_db
 from src.models import User
 
 

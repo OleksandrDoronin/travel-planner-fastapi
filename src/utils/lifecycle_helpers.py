@@ -3,7 +3,7 @@ import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
-from src.config.database import get_db
+from src.dependencies import get_db
 from src.services.cache import CacheService
 from src.tasks.token_cleanup import remove_expired_tokens
 

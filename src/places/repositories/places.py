@@ -6,7 +6,7 @@ from fastapi import Depends
 from sqlalchemy import delete, select, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.config.database import get_db
+from src.dependencies import get_db
 from src.models import Place
 from src.places.schemas.filters import PlaceFilter
 from src.places.schemas.places import PlaceCreate, PlaceUpdate

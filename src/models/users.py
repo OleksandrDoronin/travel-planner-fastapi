@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, Optional
 from sqlalchemy import Boolean, DateTime, Integer, String, func
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from src.config.database import Base
+from src.repositories.postgres_base import Base
 
 
 if TYPE_CHECKING:

@@ -6,9 +6,10 @@ from httpx import ASGITransport, AsyncClient
 from sqlalchemy import NullPool
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
-from src.config.database import Base, get_db
+from src.dependencies import get_db
 from src.main import app
 from src.models import Place, SocialAccount, User
+from src.repositories.postgres_base import Base
 
 
 DATABASE_URL = 'sqlite+aiosqlite:///test.db'

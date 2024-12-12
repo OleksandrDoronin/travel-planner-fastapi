@@ -3,7 +3,7 @@ from datetime import datetime
 from sqlalchemy import DateTime, Integer, func
 from sqlalchemy.orm import Mapped, mapped_column
 
-from src.config.database import Base
+from src.repositories.postgres_base import Base
 
 
 class TokenBlacklist(Base):
