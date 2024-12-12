@@ -2,9 +2,9 @@ from unittest.mock import patch
 
 import pytest
 from httpx import AsyncClient
-from settings import get_settings
 from starlette import status
 
+from src.settings import get_settings
 from tests.utils import create_test_token
 
 
@@ -13,7 +13,7 @@ settings = get_settings()
 
 @pytest.mark.asyncio
 async def test_google_login(async_client: AsyncClient):
-    redirect_uri = settings.GOOGLE_REDIRECT_URI
+    redirect_uri = settings.google_redirect_uri
     login_endpoint = 'api/v1/auth/google/login/'
     google_oauth_base_url = 'https://accounts.google.com/o/oauth2/'
 
@@ -54,7 +54,7 @@ async def test_google_callback_success(
     }
 
     # Define constants for URLs and test data
-    redirect_uri = settings.GOOGLE_REDIRECT_URI
+    redirect_uri = settings.google_redirect_uri
     test_code = 'mock_test_code'
     login_url = 'api/v1/auth/google/login/'
     callback_url = 'api/v1/auth/google/callback/'

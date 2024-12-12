@@ -2,56 +2,55 @@ import os
 from functools import lru_cache
 
 from dotenv import load_dotenv
-from pydantic_settings import BaseSettings
+from pydantic_settings import BaseSettings, SettingsConfigDict
+
+
+env_file = os.getenv('ENV_FILE')
+load_dotenv(dotenv_path=env_file)
 
 
 class DatabaseSettings(BaseSettings):
-    POSTGRES_DB: str
-    POSTGRES_USER: str
-    POSTGRES_PASSWORD: str
-    POSTGRES_HOST: str
-    POSTGRES_PORT: int
+    postgres_db: str
+    postgres_user: str
+    postgres_password: str
+    postgres_host: str
+    postgres_port: int
 
     @property
-    def DATABASE_URL(self) -> str:  # noqa
-        environment = os.getenv('ENVIRONMENT', 'development')
-
-        if environment == 'test':
-            return 'sqlite+aiosqlite:///./test.db'
-
+    def database_url(self) -> str:
         return (
             f'postgresql+asyncpg://'
-            f'{self.POSTGRES_USER}:'
-            f'{self.POSTGRES_PASSWORD}@'
-            f'{self.POSTGRES_HOST}:{self.POSTGRES_PORT}/'
-            f'{self.POSTGRES_DB}'
+            f'{self.postgres_user}:'
+            f'{self.postgres_password}@'
+            f'{self.postgres_host}:{self.postgres_port}/'
+            f'{self.postgres_db}'
         )
 
 
 class SecuritySettings(BaseSettings):
-    SECRET_KEY: str
-    ALGORITHM: str
-    ACCESS_TOKEN_EXPIRE: int
-    REFRESH_TOKEN_EXPIRE: int
-    JWT_SECRET_KEY: str
-    ENCRYPTION_KEY: str
+    secret_key: str
+    algorithm: str
+    access_token_expire: int
+    refresh_token_expire: int
+    jwt_secret_key: str
+    encryption_key: str
 
 
 class OAuthSettings(BaseSettings):
-    GOOGLE_OAUTH_KEY: str
-    GOOGLE_OAUTH_SECRET: str
-    GOOGLE_TOKEN_URL: str
-    GOOGLE_USERINFO_URL: str
-    GOOGLE_REDIRECT_URI: str
+    google_oauth_key: str
+    google_oauth_secret: str
+    google_token_url: str
+    google_userinfo_url: str
+    google_redirect_uri: str
 
 
 class GeonamesSettings(BaseSettings):
-    OPEN_CAGE_DATA: str
-    OPEN_CAGE_URL: str
+    open_cage_data: str
+    open_cage_url: str
 
 
 class RedisSettings(BaseSettings):
-    REDIS_URL: str
+    redis_url: str
 
 
 class Settings(
@@ -61,16 +60,14 @@ class Settings(
     GeonamesSettings,
     RedisSettings,
 ):
-    pass
+    model_config = SettingsConfigDict(
+        env_file=env_file,
+    )
 
 
 @lru_cache
 def get_settings() -> Settings:
-    """Getting settings based on the current environment."""
-
-    ENVIRONMENT = os.getenv('ENVIRONMENT', 'development')  # noqa
-    dotenv_file = os.path.join(os.path.dirname(__file__), f'../.env.{ENVIRONMENT}')
-    if not load_dotenv(dotenv_file):
-        raise FileNotFoundError(f'Environment file {dotenv_file} not found.')
-
     return Settings()
+
+
+settings = get_settings()

@@ -18,12 +18,10 @@ from src.places.exceptions import (
 from src.places.schemas.filters import PlaceFilter
 from src.places.schemas.places import PlaceCreate, PlaceGet, PlaceUpdate
 from src.places.services.places import PlaceService
-from src.settings import get_settings
 
 
 router = APIRouter(tags=['place'], prefix='/places')
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 
 @router.post(

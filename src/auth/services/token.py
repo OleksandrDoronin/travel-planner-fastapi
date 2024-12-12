@@ -9,7 +9,7 @@ from src.auth.mapper import map_refresh_token
 from src.auth.repositories.token_blacklist import TokenBlacklistRepository
 from src.auth.repositories.user import UserRepository
 from src.auth.schemas.auth_schemas import TokenRefreshResponse
-from src.settings import Settings, get_settings
+from src.settings import settings
 
 
 logger = logging.getLogger(__name__)
@@ -18,41 +18,41 @@ logger = logging.getLogger(__name__)
 class TokenService:
     def __init__(
         self,
-        settings: Annotated[Settings, Depends(get_settings)],
         token_repository: Annotated[
             TokenBlacklistRepository, Depends(TokenBlacklistRepository)
         ],
         user_repository: Annotated[UserRepository, Depends(UserRepository)],
     ):
-        self.settings = settings
         self.token_repository = token_repository
         self.user_repository = user_repository
 
+    @staticmethod
     def create_access_token(
-        self, user_id: int, expires_delta: Optional[timedelta] = None
+        user_id: int, expires_delta: Optional[timedelta] = None
     ) -> str:
         """Creates a new access token."""
         to_encode = {'sub': str(user_id)}
         expire = datetime.now(timezone.utc) + (
             expires_delta
             if expires_delta
-            else timedelta(minutes=self.settings.ACCESS_TOKEN_EXPIRE)
+            else timedelta(minutes=settings.access_token_expire)
         )
         to_encode.update({'exp': expire})
         access_token = jwt.encode(
-            to_encode, self.settings.JWT_SECRET_KEY, self.settings.ALGORITHM
+            to_encode, settings.jwt_secret_key, settings.algorithm
         )
         return access_token
 
-    def create_refresh_token(self, user_id: int) -> str:
+    @staticmethod
+    def create_refresh_token(user_id: int) -> str:
         """Creates a new refresh token."""
         to_encode = {'sub': str(user_id)}
         expire = datetime.now(timezone.utc) + timedelta(
-            days=self.settings.REFRESH_TOKEN_EXPIRE
+            days=settings.refresh_token_expire
         )
         to_encode.update({'exp': expire})
         refresh_token = jwt.encode(
-            to_encode, self.settings.JWT_SECRET_KEY, self.settings.ALGORITHM
+            to_encode, settings.jwt_secret_key, settings.algorithm
         )
         return refresh_token
 
@@ -62,13 +62,14 @@ class TokenService:
         user_id = payload['sub']
         return int(user_id)
 
-    def validate_refresh_token(self, refresh_token: str) -> dict:
+    @staticmethod
+    def validate_refresh_token(refresh_token: str) -> dict:
         """Validates the refresh token and returns the payload if valid."""
 
         payload = jwt.decode(
             refresh_token,
-            self.settings.JWT_SECRET_KEY,
-            algorithms=[self.settings.ALGORITHM],
+            settings.jwt_secret_key,
+            algorithms=[settings.algorithm],
         )
         exp = payload.get('exp')
 
@@ -86,7 +87,7 @@ class TokenService:
     def get_token_expiration(self, token: str) -> Optional[datetime]:
         """Retrieves the expiration time from a token (exp)."""
 
-        payload = self.validate_refresh_token(token)
+        payload = self.validate_refresh_token(refresh_token=token)
         expires_at_timestamp = payload.get('exp')
 
         if expires_at_timestamp:

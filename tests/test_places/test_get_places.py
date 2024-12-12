@@ -82,3 +82,6 @@ async def test_get_places_by_filter_non_existent(
     assert response.status_code == 200
     data = response.json()
     assert data == []
+
+
+w

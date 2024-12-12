@@ -10,7 +10,7 @@ settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
-redis_client = redis.from_url(settings.REDIS_URL)
+redis_client = redis.from_url(settings.redis_url)
 
 
 class CacheService:

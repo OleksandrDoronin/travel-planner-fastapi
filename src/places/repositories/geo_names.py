@@ -3,10 +3,9 @@ import logging
 import httpx
 
 from src.places.exceptions import GeoServiceError
-from src.settings import get_settings
+from src.settings import settings
 
 
-settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
@@ -17,11 +16,11 @@ class GeoRepository:
         Checks whether the location specified by the city and country exists
         using OpenCage API.
         """
-        params = {'q': f'{city}, {country}', 'key': settings.OPEN_CAGE_DATA}
+        params = {'q': f'{city}, {country}', 'key': settings.open_cage_data}
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(settings.OPEN_CAGE_URL, params=params)
+                response = await client.get(settings.open_cage_url, params=params)
             response.raise_for_status()
             data = response.json()
             if 'results' not in data or len(data['results']) == 0:

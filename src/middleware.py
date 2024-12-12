@@ -35,5 +35,5 @@ def setup_middleware(app):
     )
 
     app.add_middleware(GZipMiddleware, minimum_size=1000)
-    app.add_middleware(SessionMiddleware, secret_key=settings.SECRET_KEY)
+    app.add_middleware(SessionMiddleware, secret_key=settings.secret_key)
     app.add_middleware(ErrorHandlingMiddleware)

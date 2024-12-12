@@ -1,4 +1,3 @@
-import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -11,10 +10,6 @@ from src.utils.lifecycle_helpers import (
     check_redis_connection,
     setup_scheduler,
 )
-
-
-setup_logging()
-logger = logging.getLogger(__name__)
 
 
 @asynccontextmanager
@@ -36,6 +31,7 @@ async def lifespan(app: FastAPI):  # noqa F841
 def create_app() -> FastAPI:
     """Create and configure the FastAPI app."""
 
+    setup_logging()
     travel_app = FastAPI(title='Travel planner API', lifespan=lifespan)
 
     # Setup middleware and routers

@@ -19,7 +19,7 @@ from src.auth.schemas.user_schemas import SocialAccountLink, UserBase, UserRespo
 from src.auth.services.token import TokenService
 from src.auth.utils import generate_random_state
 from src.services.cache import CacheService
-from src.settings import Settings, get_settings
+from src.settings import settings
 
 
 logger = logging.getLogger(__name__)
@@ -193,10 +193,8 @@ class GoogleAuthService:
 class GoogleOAuthUrlGenerator:
     def __init__(
         self,
-        settings: Annotated[Settings, Depends(get_settings)],
         cache_service: Annotated[CacheService, Depends(CacheService)],
     ):
-        self.settings = settings
         self.cache_service = cache_service
 
     async def generate_auth_url(
@@ -242,13 +240,12 @@ class GoogleOAuthUrlGenerator:
             )
         )
 
-    def _generate_query_params(
-        self, google_auth_request: GoogleAuthRequestSchema
-    ) -> dict:
+    @staticmethod
+    def _generate_query_params(google_auth_request: GoogleAuthRequestSchema) -> dict:
         """Helper function to generate the OAuth query parameters."""
         return {
             'response_type': 'code',
-            'client_id': self.settings.GOOGLE_OAUTH_KEY,
+            'client_id': settings.google_oauth_key,
             'redirect_uri': google_auth_request.redirect_uri,
             'state': google_auth_request.state,
             'scope': 'email openid profile',

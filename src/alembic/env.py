@@ -7,7 +7,7 @@ from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
 
 from src.config.database import Base
-from models import User, SocialAccount, TokenBlacklist, Place, PlannedPlace  # noqa
+from src.models import User, SocialAccount, TokenBlacklist, Place, PlannedPlace  # noqa
 
 from src.settings import get_settings
 
@@ -20,7 +20,7 @@ if config.config_file_name is not None:
 
 target_metadata = Base.metadata
 
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.database_url)
 
 
 def run_migrations_offline() -> None:

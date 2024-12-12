@@ -17,9 +17,9 @@ LOGGING_CONFIG = {
         },
     },
     'loggers': {
-        'travel_planner_app': {
+        '': {
             'handlers': ['console'],
-            'level': 'DEBUG',
+            'level': 'INFO',
             'propagate': False,
         },
     },

@@ -19,12 +19,11 @@ from src.auth.services.google_oauth import (
     GoogleOAuthUrlGenerator,
 )
 from src.auth.services.token import TokenService
-from src.settings import get_settings
+from src.settings import settings
 
 
 router = APIRouter(tags=['auth'], prefix='/auth')
 logger = logging.getLogger(__name__)
-settings = get_settings()
 
 
 @router.get(
@@ -61,7 +60,7 @@ async def google_login(
 )
 async def google_callback(
     google_auth_service: Annotated[GoogleAuthService, Depends(GoogleAuthService)],
-    redirect_uri: str = Query(settings.GOOGLE_REDIRECT_URI, description='Redirect uri'),
+    redirect_uri: str = Query(settings.google_redirect_uri, description='Redirect uri'),
     code: str = Query(
         default=None, description='Authorization code provided by Google'
     ),

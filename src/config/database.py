@@ -7,14 +7,13 @@ from sqlalchemy.ext.asyncio import (
 )
 from sqlalchemy.orm import declarative_base
 
-from src.settings import get_settings
+from src.settings import settings
 
 
-settings = get_settings()
 Base = declarative_base()
 
 engine = create_async_engine(
-    settings.DATABASE_URL,
+    settings.database_url,
     future=True,
     echo=True,
 )

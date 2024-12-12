@@ -1,8 +1,4 @@
-import os
 from datetime import date
-
-
-os.environ['ENVIRONMENT'] = 'test'
 from typing import AsyncGenerator
 
 import pytest
@@ -13,12 +9,11 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from src.config.database import Base, get_db
 from src.main import app
 from src.models import Place, SocialAccount, User
-from src.settings import get_settings
 
 
-settings = get_settings()
+DATABASE_URL = 'sqlite+aiosqlite:///test.db'
 
-engine_test = create_async_engine(settings.DATABASE_URL, poolclass=NullPool)
+engine_test = create_async_engine(DATABASE_URL, poolclass=NullPool)
 
 async_session_maker = async_sessionmaker(
     bind=engine_test, expire_on_commit=False, future=True
