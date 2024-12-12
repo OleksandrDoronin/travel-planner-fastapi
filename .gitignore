@@ -3,7 +3,6 @@ venv/
 *.virtualenv/
 .env.development
 .env.docker
-.env.test
 .env.production
 
 # IDE - PyCharm
@@ -25,3 +24,4 @@ __pycache__/
 
 test.db
 test_project.db
+.coverage
