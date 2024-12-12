@@ -15,7 +15,6 @@ def setup_scheduler():
     """Setting up the task scheduler."""
     scheduler = AsyncIOScheduler()
     scheduler.start()
-    logger.info('Scheduler started.')
 
     # Add a token cleanup task
     add_token_cleanup_task(scheduler)

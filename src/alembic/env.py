@@ -5,14 +5,12 @@ from alembic import context
 from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import async_engine_from_config
-
+from src.settings import settings
 from src.repositories.postgres_base import Base
 from src.models import User, SocialAccount, TokenBlacklist, Place, PlannedPlace  # noqa
 
-from src.settings import get_settings
 
 
-settings = get_settings()
 config = context.config
 
 if config.config_file_name is not None:
