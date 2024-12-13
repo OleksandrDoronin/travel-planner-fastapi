@@ -2,10 +2,10 @@ from datetime import datetime
 
 from pydantic import BaseModel, ConfigDict, HttpUrl
 
-from src.auth.schemas.user_schemas import UserResponse
+from src.auth.schemas.user_schemas import UserWithSocialAccountsResponse
 
 
-class GoogleAuthRequestSchema(BaseModel):
+class GoogleAuthRequest(BaseModel):
     """Schema for Google authentication request parameters."""
 
     redirect_uri: HttpUrl
@@ -21,7 +21,7 @@ class GoogleLoginResponse(BaseModel):
 class GoogleCallBackResponse(BaseModel):
     """Schema for the response after Google callback with user and token data."""
 
-    user: UserResponse
+    user: UserWithSocialAccountsResponse
     access_token: str
     refresh_token: str
 
@@ -41,7 +41,7 @@ class TokenRefreshResponse(BaseModel):
     refresh_token: str
 
 
-class TokenBlacklistSchema(BaseModel):
+class TokenBlacklistRequest(BaseModel):
     """Schema for adding tokens to the blacklist with expiration details."""
 
     token: str

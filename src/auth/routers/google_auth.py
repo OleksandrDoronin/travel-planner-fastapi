@@ -2,12 +2,12 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from httpx import HTTPStatusError, RequestError
 from jose import JWTError
 from pydantic import HttpUrl
 from starlette import status
 
 from src.auth.current_user import get_current_user
+from src.auth.exceptions import GoogleOAuthError
 from src.auth.schemas.auth_schemas import (
     GoogleCallBackResponse,
     GoogleLoginResponse,
@@ -77,22 +77,11 @@ async def google_callback(
         )
         return callback_response
 
-    except ValueError as e:
-        logger.error(f'Error in Google OAuth callback: {str(e)}')
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
-
-    except HTTPStatusError as e:
-        logger.error(f'HTTP error when processing Google OAuth callback: {repr(e)}')
+    except GoogleOAuthError:
+        logger.exception('Google OAuth error occurred.')
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f'Failed to fetch data from Google: {repr(e)}',
-        )
-
-    except RequestError as e:
-        logger.error(f'Network error when processing Google OAuth callback: {repr(e)}')
-        raise HTTPException(
-            status_code=status.HTTP_502_BAD_GATEWAY,
-            detail='Network error occurred while fetching data from Google',
+            detail='An error occurred while processing your request. Please try again later.',
         )
 
 

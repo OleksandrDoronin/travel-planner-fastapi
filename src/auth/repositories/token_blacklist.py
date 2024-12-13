@@ -4,7 +4,7 @@ from fastapi import Depends
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.schemas.auth_schemas import TokenBlacklistSchema
+from src.auth.schemas.auth_schemas import TokenBlacklistRequest
 from src.dependencies import get_db
 from src.models import TokenBlacklist
 
@@ -14,7 +14,7 @@ class TokenBlacklistRepository:
         self.db_session = db_session
 
     async def add_token_to_blacklist(
-        self, blacklist_entry: TokenBlacklistSchema
+        self, blacklist_entry: TokenBlacklistRequest
     ) -> None:
         """Adds a token to the blacklist."""
 

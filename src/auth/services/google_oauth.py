@@ -6,18 +6,23 @@ from cryptography.fernet import Fernet
 from fastapi import Depends
 
 from src.auth.dependencies import get_cypher
-from src.auth.mapper import map_and_encode_tokens, map_to_user
+from src.auth.exceptions import GoogleOAuthError
 from src.auth.repositories.google_oauth import GoogleOAuthRepository
 from src.auth.repositories.social_account import SocialAccountRepository
 from src.auth.repositories.user import UserRepository
 from src.auth.schemas.auth_schemas import (
-    GoogleAuthRequestSchema,
+    GoogleAuthRequest,
     GoogleCallBackResponse,
     GoogleLoginResponse,
 )
-from src.auth.schemas.user_schemas import SocialAccountLink, UserBase, UserResponse
+from src.auth.schemas.google_oauth import GoogleTokenResponse, GoogleUserInfoResponse
+from src.auth.schemas.user_schemas import (
+    SocialAccountLink,
+    UserBase,
+    UserWithSocialAccountsResponse,
+)
 from src.auth.services.token import TokenService
-from src.auth.utils import generate_random_state
+from src.auth.utils import encode_token, generate_random_state
 from src.services.cache import CacheService
 from src.settings import settings
 
@@ -59,99 +64,118 @@ class GoogleAuthService:
         and connects the account.
         """
 
-        # Check that all necessary parameters are present
-        await self.validate_required_params(
+        # Validate parameters
+        await self._validate_callback_params(
             code=code, redirect_uri=redirect_uri, state=state
         )
 
-        # Check that the state from the cache matches the one sent
-        await self.verify_state(state=state)
-
         # Fetch tokens and user info
-        token_data = await self._fetch_and_validate_google_tokens(
+        token_data = await self._fetch_google_tokens(
             code=code, redirect_uri=redirect_uri
         )
-
-        # Get user information from Google using an access token
         user_info = await self._fetch_google_user_info(
             access_token=token_data['access_token']
         )
 
-        # Map to internal user model and create or fetch user
-        user = map_to_user(user=user_info)
-        user = await self.create_or_get_user(user=user)
-
-        # Create or connect social account
-        account = self._map_social_account(
+        # Create or retrieve user, and link social account
+        user = await self._create_or_get_user(user_info=user_info)
+        await self._create_or_connect_social_account(
             user_info=user_info, token_data=token_data, user_id=user.id
         )
-        await self.get_or_connect_accounts(account=account)
 
-        # Prepare and return response
+        # Prepare response
         return await self._prepare_callback_response(user=user)
+
+    async def _validate_callback_params(
+        self, code: str, redirect_uri: str, state: str
+    ) -> None:
+        """Validate required parameters for the callback."""
+        if not all([code, redirect_uri, state]):
+            raise GoogleOAuthError()
+
+        await self.verify_state(state=state)
+
+    async def _create_or_get_user(self, user_info: GoogleUserInfoResponse) -> UserBase:
+        """
+        Creates a UserBase object from Google data and stores it in the database if necessary.
+        """
+        user = UserBase(
+            email=user_info['email'],
+            full_name=user_info['name'],
+            profile_picture=user_info['picture'],
+        )
+        return await self.create_or_get_user(user=user)
 
     async def create_or_get_user(self, user: UserBase) -> UserBase:
         """
         Creates a new user or retrieves an existing one by email.
         """
-        entity = await self.user_repository.get_user_by_email(email=user.email)
-        if not entity:
-            entity = await self.user_repository.create_user(user=user)
-        return entity
+        existing_user = await self.user_repository.get_user_by_email(email=user.email)
+        if not existing_user:
+            return await self.user_repository.create_user(user=user)
+        return existing_user
 
-    async def get_or_connect_accounts(self, account: SocialAccountLink):
+    async def _create_or_connect_social_account(
+        self,
+        user_info: GoogleUserInfoResponse,
+        token_data: GoogleTokenResponse,
+        user_id: int,
+    ) -> SocialAccountLink:
+        """
+        Creates or connects a social account based on Google user info and tokens.
+        """
+        return await self.get_or_connect_accounts(
+            user_info=user_info, token_data=token_data, user_id=user_id
+        )
+
+    async def get_or_connect_accounts(
+        self,
+        user_info: GoogleUserInfoResponse,
+        token_data: GoogleTokenResponse,
+        user_id: int,
+    ) -> SocialAccountLink:
         """
         Links a social account to the user or updates an existing one.
         """
-        social_account = await self.social_repository.get_social_account(
-            social_account=account
+        social_account = SocialAccountLink(
+            service=self._service,
+            social_account_id=user_info['id'],
+            access_token=encode_token(token_data['access_token'], self.cypher),
+            refresh_token=encode_token(token_data['refresh_token'], self.cypher),
+            user_id=user_id,
         )
-        if not social_account:
-            await self.social_repository.create_social_account(social_account=account)
-        else:
-            social_account.access_token = account.access_token
-            social_account.refresh_token = account.refresh_token
-            social_account = await self.social_repository.update_social_account(
-                social_account=social_account
-            )
-        return social_account
 
-    async def _fetch_and_validate_google_tokens(
+        existing_account = await self.social_repository.get_social_account(
+            social_account=social_account
+        )
+        if existing_account:
+            existing_account.access_token = social_account.access_token
+            existing_account.refresh_token = social_account.refresh_token
+            return await self.social_repository.update_social_account(
+                social_account=existing_account
+            )
+
+        return await self.social_repository.create_social_account(
+            social_account=social_account
+        )
+
+    async def _fetch_google_tokens(
         self, code: str, redirect_uri: str
-    ) -> dict:
+    ) -> GoogleTokenResponse:
         """
         Fetch tokens from Google and validate the access token.
         """
-        token_data = await self.google_oauth_repo.fetch_token(
+        return await self.google_oauth_repo.fetch_token(
             code=code, redirect_uri=redirect_uri
         )
 
-        # Validate access token
-        if 'access_token' not in token_data:
-            raise ValueError('Access token not found in response')
-
-        return token_data
-
-    async def _fetch_google_user_info(self, access_token: str):
+    async def _fetch_google_user_info(
+        self, access_token: str
+    ) -> GoogleUserInfoResponse:
         """
         Fetches user information from Google using the provided access token.
         """
         return await self.google_oauth_repo.fetch_user_info(access_token=access_token)
-
-    def _map_social_account(self, user_info, token_data, user_id):
-        """
-        Maps the Google user info and tokens to a social account object.
-        """
-        if 'id' not in user_info:
-            raise ValueError('Missing "id" in user info from Google.')
-
-        return map_and_encode_tokens(
-            service=self._service,
-            social_account_id=user_info['id'],
-            tokens=token_data,
-            user_id=user_id,
-            encryptor=self.cypher,
-        )
 
     async def _prepare_callback_response(
         self, user: UserBase
@@ -165,7 +189,7 @@ class GoogleAuthService:
         access_token = self.token_service.create_access_token(user_id=user.id)
         refresh_token = self.token_service.create_refresh_token(user_id=user.id)
 
-        user_response = UserResponse(
+        user_response = UserWithSocialAccountsResponse(
             **user.model_dump(),
             social_accounts=social_accounts,
         )
@@ -179,15 +203,8 @@ class GoogleAuthService:
         """Validate that the state matches."""
         cached_state = await self.cache_service.get_cache(f'google_oauth_state_{state}')
         if cached_state is None or cached_state.get('state') != state:
-            raise ValueError('Invalid state parameter.')
-
-    @staticmethod
-    async def validate_required_params(code, redirect_uri, state):
-        """Validate that the authorization code, redirect URI, and state are present."""
-        if not code or not redirect_uri or not state:
-            raise ValueError(
-                'Authorization code, redirect URI, and state are required.'
-            )
+            logger.error('Invalid state parameter. State received: %s', state)
+            raise GoogleOAuthError()
 
 
 class GoogleOAuthUrlGenerator:
@@ -223,9 +240,7 @@ class GoogleOAuthUrlGenerator:
 
     def _get_google_auth_url(self, redirect_uri: str, state: str) -> str:
         """Helper to generate the Google OAuth URL."""
-        google_auth_request = GoogleAuthRequestSchema(
-            redirect_uri=redirect_uri, state=state
-        )
+        google_auth_request = GoogleAuthRequest(redirect_uri=redirect_uri, state=state)
 
         query_params = self._generate_query_params(google_auth_request)
 
@@ -241,7 +256,7 @@ class GoogleOAuthUrlGenerator:
         )
 
     @staticmethod
-    def _generate_query_params(google_auth_request: GoogleAuthRequestSchema) -> dict:
+    def _generate_query_params(google_auth_request: GoogleAuthRequest) -> dict:
         """Helper function to generate the OAuth query parameters."""
         return {
             'response_type': 'code',
