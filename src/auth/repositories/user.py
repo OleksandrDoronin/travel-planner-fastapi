@@ -16,9 +16,7 @@ class UserRepository:
 
     async def get_user(self, **filters) -> Optional[UserBase]:
         """Get a user by given filters (e.g., email or id)."""
-        stmt = (
-            select(User).options(joinedload(User.social_accounts)).filter_by(**filters)
-        )
+        stmt = select(User).options(joinedload(User.social_accounts)).filter_by(**filters)
         result = await self.db_session.execute(stmt)
         user = result.scalars().first()
         return UserBase.model_validate(user) if user else None

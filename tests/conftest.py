@@ -16,9 +16,7 @@ DATABASE_URL = 'sqlite+aiosqlite:///test.db'
 
 engine_test = create_async_engine(DATABASE_URL, poolclass=NullPool)
 
-async_session_maker = async_sessionmaker(
-    bind=engine_test, expire_on_commit=False, future=True
-)
+async_session_maker = async_sessionmaker(bind=engine_test, expire_on_commit=False, future=True)
 
 
 async def override_get_async_session() -> AsyncGenerator[AsyncSession, None]:
@@ -42,9 +40,7 @@ async def init_db():
 
 @pytest.fixture(scope='session')
 async def async_client() -> AsyncGenerator[AsyncClient, None]:
-    async with AsyncClient(
-        transport=ASGITransport(app=app), base_url='http://test'
-    ) as client:
+    async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
         yield client
 
 

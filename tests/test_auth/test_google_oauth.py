@@ -17,9 +17,7 @@ async def test_google_login(async_client: AsyncClient):
     login_endpoint = 'api/v1/auth/google/login/'
     google_oauth_base_url = 'https://accounts.google.com/o/oauth2/'
 
-    response = await async_client.get(
-        login_endpoint, params={'redirect_uri': redirect_uri}
-    )
+    response = await async_client.get(login_endpoint, params={'redirect_uri': redirect_uri})
     assert response.status_code == status.HTTP_200_OK
     assert 'url' in response.json()
     assert response.json()['url'].startswith(google_oauth_base_url)
@@ -61,9 +59,7 @@ async def test_google_callback_success(
     generated_state = 'real_generated_state'
 
     # Step 1: Simulate a GET request to the login endpoint
-    login_response = await async_client.get(
-        login_url, params={'redirect_uri': redirect_uri}
-    )
+    login_response = await async_client.get(login_url, params={'redirect_uri': redirect_uri})
     assert login_response.status_code == status.HTTP_200_OK
 
     # Step 2: Mock the return value from the cache
@@ -95,9 +91,7 @@ async def test_google_callback_success(
 
 
 @pytest.mark.asyncio
-async def test_update_refresh_access_token_blacklist(
-    async_client: AsyncClient, mock_user
-):
+async def test_update_refresh_access_token_blacklist(async_client: AsyncClient, mock_user):
     """
     Test that a refresh token can be used to generate new access and refresh tokens,
     and that the old refresh token is blacklisted after usage.
@@ -159,9 +153,7 @@ async def test_logout_user_not_found(async_client: AsyncClient):
 async def test_logout_unauthorized(async_client: AsyncClient):
     endpoint = 'api/v1/auth/logout'
 
-    response = await async_client.post(
-        endpoint, json={'refresh_token': 'some_refresh_token'}
-    )
+    response = await async_client.post(endpoint, json={'refresh_token': 'some_refresh_token'})
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
     assert response.json() == {'detail': 'Not authenticated'}
 

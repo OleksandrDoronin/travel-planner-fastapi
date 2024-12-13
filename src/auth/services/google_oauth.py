@@ -38,13 +38,9 @@ class GoogleAuthService:
     def __init__(
         self,
         user_repository: Annotated[UserRepository, Depends(UserRepository)],
-        social_repository: Annotated[
-            SocialAccountRepository, Depends(SocialAccountRepository)
-        ],
+        social_repository: Annotated[SocialAccountRepository, Depends(SocialAccountRepository)],
         token_service: Annotated[TokenService, Depends(TokenService)],
-        google_oauth_repo: Annotated[
-            GoogleOAuthRepository, Depends(GoogleOAuthRepository)
-        ],
+        google_oauth_repo: Annotated[GoogleOAuthRepository, Depends(GoogleOAuthRepository)],
         cypher: Annotated[Fernet, Depends(get_cypher)],
         cache_service: Annotated[CacheService, Depends(CacheService)],
     ):
@@ -65,17 +61,11 @@ class GoogleAuthService:
         """
 
         # Validate parameters
-        await self._validate_callback_params(
-            code=code, redirect_uri=redirect_uri, state=state
-        )
+        await self._validate_callback_params(code=code, redirect_uri=redirect_uri, state=state)
 
         # Fetch tokens and user info
-        token_data = await self._fetch_google_tokens(
-            code=code, redirect_uri=redirect_uri
-        )
-        user_info = await self._fetch_google_user_info(
-            access_token=token_data['access_token']
-        )
+        token_data = await self._fetch_google_tokens(code=code, redirect_uri=redirect_uri)
+        user_info = await self._fetch_google_user_info(access_token=token_data['access_token'])
 
         # Create or retrieve user, and link social account
         user = await self._create_or_get_user(user_info=user_info)
@@ -86,9 +76,7 @@ class GoogleAuthService:
         # Prepare response
         return await self._prepare_callback_response(user=user)
 
-    async def _validate_callback_params(
-        self, code: str, redirect_uri: str, state: str
-    ) -> None:
+    async def _validate_callback_params(self, code: str, redirect_uri: str, state: str) -> None:
         """Validate required parameters for the callback."""
         if not all([code, redirect_uri, state]):
             raise GoogleOAuthError()
@@ -155,37 +143,25 @@ class GoogleAuthService:
                 social_account=existing_account
             )
 
-        return await self.social_repository.create_social_account(
-            social_account=social_account
-        )
+        return await self.social_repository.create_social_account(social_account=social_account)
 
-    async def _fetch_google_tokens(
-        self, code: str, redirect_uri: str
-    ) -> GoogleTokenResponse:
+    async def _fetch_google_tokens(self, code: str, redirect_uri: str) -> GoogleTokenResponse:
         """
         Fetch tokens from Google and validate the access token.
         """
-        return await self.google_oauth_repo.fetch_token(
-            code=code, redirect_uri=redirect_uri
-        )
+        return await self.google_oauth_repo.fetch_token(code=code, redirect_uri=redirect_uri)
 
-    async def _fetch_google_user_info(
-        self, access_token: str
-    ) -> GoogleUserInfoResponse:
+    async def _fetch_google_user_info(self, access_token: str) -> GoogleUserInfoResponse:
         """
         Fetches user information from Google using the provided access token.
         """
         return await self.google_oauth_repo.fetch_user_info(access_token=access_token)
 
-    async def _prepare_callback_response(
-        self, user: UserBase
-    ) -> GoogleCallBackResponse:
+    async def _prepare_callback_response(self, user: UserBase) -> GoogleCallBackResponse:
         """
         Prepares the response for the Google OAuth callback.
         """
-        social_accounts = await self.social_repository.get_social_accounts_for_user(
-            user_id=user.id
-        )
+        social_accounts = await self.social_repository.get_social_accounts_for_user(user_id=user.id)
         access_token = self.token_service.create_access_token(user_id=user.id)
         refresh_token = self.token_service.create_refresh_token(user_id=user.id)
 
@@ -214,17 +190,13 @@ class GoogleOAuthUrlGenerator:
     ):
         self.cache_service = cache_service
 
-    async def generate_auth_url(
-        self, redirect_uri: str
-    ) -> tuple[GoogleLoginResponse, str]:
+    async def generate_auth_url(self, redirect_uri: str) -> tuple[GoogleLoginResponse, str]:
         """Generate the Google OAuth URL and manage the state."""
 
         # Generate and store state in cache
         state = await self._generate_and_cache_state()
 
-        google_auth_url = self._get_google_auth_url(
-            redirect_uri=redirect_uri, state=state
-        )
+        google_auth_url = self._get_google_auth_url(redirect_uri=redirect_uri, state=state)
         if not google_auth_url:
             raise ValueError('Failed to generate Google OAuth URL')
 
@@ -233,9 +205,7 @@ class GoogleOAuthUrlGenerator:
     async def _generate_and_cache_state(self) -> str:
         """Generate a random state and save it to cache."""
         state = generate_random_state()
-        await self.cache_service.set_cache(
-            f'google_oauth_state_{state}', {'state': state}, ttl=100
-        )
+        await self.cache_service.set_cache(f'google_oauth_state_{state}', {'state': state}, ttl=100)
         return state
 
     def _get_google_auth_url(self, redirect_uri: str, state: str) -> str:

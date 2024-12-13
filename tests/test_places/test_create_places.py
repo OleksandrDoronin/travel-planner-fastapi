@@ -37,9 +37,7 @@ async def test_successful_create_place(async_client: AsyncClient, mock_user):
 
 
 @pytest.mark.asyncio
-async def test_create_place_with_invalid_city_and_country(
-    async_client: AsyncClient, mock_user
-):
+async def test_create_place_with_invalid_city_and_country(async_client: AsyncClient, mock_user):
     token = create_test_token(user_id=mock_user.id)
 
     url = 'api/v1/places/'

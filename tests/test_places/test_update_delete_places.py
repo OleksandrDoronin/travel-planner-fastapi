@@ -12,9 +12,7 @@ async def test_update_place_by_id(async_client: AsyncClient, mock_user, mock_pla
     url = f'api/v1/places/{mock_place.id}'
 
     # Get data before update
-    response_before = await async_client.get(
-        url, headers={'Authorization': f'Bearer {token}'}
-    )
+    response_before = await async_client.get(url, headers={'Authorization': f'Bearer {token}'})
 
     assert response_before.status_code == status.HTTP_200_OK
     response_data_before = response_before.json()
@@ -101,9 +99,7 @@ async def test_update_place_with_invalid_token(async_client: AsyncClient, mock_p
 async def test_delete_place_by_id(async_client: AsyncClient, mock_user, mock_place):
     token = create_test_token(user_id=mock_user.id)
     url = f'api/v1/places/{mock_place.id}'
-    response = await async_client.delete(
-        url, headers={'Authorization': f'Bearer {token}'}
-    )
+    response = await async_client.delete(url, headers={'Authorization': f'Bearer {token}'})
     assert response.status_code == status.HTTP_204_NO_CONTENT
 
     # Check place after deleting
@@ -121,13 +117,9 @@ async def test_delete_place_without_token(async_client: AsyncClient, mock_place)
 
 
 @pytest.mark.asyncio
-async def test_delete_place_other_user(
-    async_client: AsyncClient, mock_place, another_user
-):
+async def test_delete_place_other_user(async_client: AsyncClient, mock_place, another_user):
     token = create_test_token(user_id=another_user.id)
     url = f'api/v1/places/{mock_place.id}'
 
-    response = await async_client.delete(
-        url, headers={'Authorization': f'Bearer {token}'}
-    )
+    response = await async_client.delete(url, headers={'Authorization': f'Bearer {token}'})
     assert response.status_code == status.HTTP_404_NOT_FOUND

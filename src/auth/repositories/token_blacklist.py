@@ -13,9 +13,7 @@ class TokenBlacklistRepository:
     def __init__(self, db_session: Annotated[AsyncSession, Depends(get_db)]):
         self.db_session = db_session
 
-    async def add_token_to_blacklist(
-        self, blacklist_entry: TokenBlacklistRequest
-    ) -> None:
+    async def add_token_to_blacklist(self, blacklist_entry: TokenBlacklistRequest) -> None:
         """Adds a token to the blacklist."""
 
         blacklist_entry = TokenBlacklist(**blacklist_entry.model_dump())

@@ -13,9 +13,7 @@ if TYPE_CHECKING:
 class SocialAccount(Base):
     __tablename__ = 'social_accounts'
 
-    id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     service: Mapped[str]
     social_account_id: Mapped[str]
     access_token: Mapped[Optional[str]] = mapped_column(unique=True)

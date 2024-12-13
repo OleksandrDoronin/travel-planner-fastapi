@@ -13,9 +13,7 @@ class SocialAccountRepository:
     def __init__(self, db_session: Annotated[AsyncSession, Depends(get_db)]):
         self.db_session = db_session
 
-    async def create_social_account(
-        self, social_account: SocialAccountLink
-    ) -> SocialAccountLink:
+    async def create_social_account(self, social_account: SocialAccountLink) -> SocialAccountLink:
         """
         Creates a new social account in the database and returns the validated model.
         """
@@ -26,9 +24,7 @@ class SocialAccountRepository:
         await self.db_session.refresh(social_account)
         return SocialAccountLink.model_validate(social_account)
 
-    async def update_social_account(
-        self, social_account: SocialAccountLink
-    ) -> SocialAccountLink:
+    async def update_social_account(self, social_account: SocialAccountLink) -> SocialAccountLink:
         """
         Updates an existing social account in the database and returns the
         validated model.
@@ -53,13 +49,9 @@ class SocialAccountRepository:
             select(SocialAccount).where(SocialAccount.user_id == user_id)
         )
         social_accounts = result.scalars().all()
-        return [
-            SocialAccountLink.model_validate(account) for account in social_accounts
-        ]
+        return [SocialAccountLink.model_validate(account) for account in social_accounts]
 
-    async def get_social_account(
-        self, social_account: SocialAccountLink
-    ) -> SocialAccountLink:
+    async def get_social_account(self, social_account: SocialAccountLink) -> SocialAccountLink:
         """
         Fetches a specific social account by service and social account ID
         and returns the validated model.
@@ -73,9 +65,7 @@ class SocialAccountRepository:
         )
         social_account = result.scalars().first()
         return (
-            SocialAccountLink.model_validate(social_account)
-            if social_account is not None
-            else None
+            SocialAccountLink.model_validate(social_account) if social_account is not None else None
         )
 
     async def get_social_accounts_for_user_response(self, user_id: int):
@@ -88,6 +78,4 @@ class SocialAccountRepository:
             select(SocialAccount).where(SocialAccount.user_id == user_id)
         )
         social_accounts = result.scalars().all()
-        return [
-            SocialAccountResponse.model_validate(account) for account in social_accounts
-        ]
+        return [SocialAccountResponse.model_validate(account) for account in social_accounts]

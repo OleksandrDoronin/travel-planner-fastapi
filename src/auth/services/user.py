@@ -15,9 +15,7 @@ class UserService:
     def __init__(
         self,
         user_repository: Annotated[UserRepository, Depends(UserRepository)],
-        social_repository: Annotated[
-            SocialAccountRepository, Depends(SocialAccountRepository)
-        ],
+        social_repository: Annotated[SocialAccountRepository, Depends(SocialAccountRepository)],
     ):
         self.user_repository = user_repository
         self.social_repository = social_repository
@@ -28,13 +26,9 @@ class UserService:
         if not user:
             raise ValueError('User not found')
 
-        social_accounts = (
-            await self.social_repository.get_social_accounts_for_user_response(
-                user_id=user.id
-            )
+        social_accounts = await self.social_repository.get_social_accounts_for_user_response(
+            user_id=user.id
         )
 
-        user_response = ExtendedUserResponse(
-            **user.model_dump(), social_accounts=social_accounts
-        )
+        user_response = ExtendedUserResponse(**user.model_dump(), social_accounts=social_accounts)
         return user_response

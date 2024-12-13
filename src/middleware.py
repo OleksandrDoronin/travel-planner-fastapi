@@ -20,9 +20,7 @@ class ErrorHandlingMiddleware(BaseHTTPMiddleware):
             return response
         except Exception as e:
             logger.error(f'Unexpected error: {e}', exc_info=True)
-            return JSONResponse(
-                status_code=500, content={'detail': 'Internal server error'}
-            )
+            return JSONResponse(status_code=500, content={'detail': 'Internal server error'})
 
 
 def setup_middleware(app):

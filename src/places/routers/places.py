@@ -36,9 +36,7 @@ async def create_place(
     current_user: User = Depends(get_current_user),
 ):
     try:
-        place = await places_services.create_place(
-            user_id=current_user.id, place_data=place_data
-        )
+        place = await places_services.create_place(user_id=current_user.id, place_data=place_data)
         return place
 
     except (PlaceAlreadyExistsError, LocationValidationError) as e:
@@ -91,9 +89,7 @@ async def get_place_by_id(
     place_id: int,
 ):
     try:
-        return await place_service.get_place_by_id(
-            place_id=place_id, user_id=current_user.id
-        )
+        return await place_service.get_place_by_id(place_id=place_id, user_id=current_user.id)
 
     except ValueError as e:
         logger.error(f'Value error: {repr(e)}')
@@ -140,9 +136,7 @@ async def delete_place_by_id(
     place_id: int,
 ):
     try:
-        await place_service.delete_place_by_id(
-            place_id=place_id, user_id=current_user.id
-        )
+        await place_service.delete_place_by_id(place_id=place_id, user_id=current_user.id)
 
     except ValueError as e:
         logger.error(f'Value error: {repr(e)}')

@@ -43,9 +43,7 @@ async def google_login(
         (
             google_auth_response,
             state,
-        ) = await google_oauth_url_generator.generate_auth_url(
-            redirect_uri=redirect_uri
-        )
+        ) = await google_oauth_url_generator.generate_auth_url(redirect_uri=redirect_uri)
         return google_auth_response
 
     except ValueError as e:
@@ -61,9 +59,7 @@ async def google_login(
 async def google_callback(
     google_auth_service: Annotated[GoogleAuthService, Depends(GoogleAuthService)],
     redirect_uri: str = Query(settings.google_redirect_uri, description='Redirect uri'),
-    code: str = Query(
-        default=None, description='Authorization code provided by Google'
-    ),
+    code: str = Query(default=None, description='Authorization code provided by Google'),
     state: str = Query(None, description='State parameter for CSRF protection'),
 ) -> GoogleCallBackResponse:
     """Handle the callback from Google OAuth after authorization."""
@@ -98,9 +94,7 @@ async def logout(
     """Logs out the user by blacklisting the provided refresh token."""
 
     try:
-        token_service.validate_refresh_token(
-            refresh_token=token_refresh_request.refresh_token
-        )
+        token_service.validate_refresh_token(refresh_token=token_refresh_request.refresh_token)
         await token_service.blacklist_token(token=token_refresh_request.refresh_token)
         return {'detail': 'Successfully logged out.'}
 

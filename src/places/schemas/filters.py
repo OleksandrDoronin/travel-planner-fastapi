@@ -27,9 +27,7 @@ class PlaceFilter(Filter):
         for field_name in value:
             field_name = field_name.replace('+', '').replace('-', '')
             if field_name not in allowed_field_names:
-                raise ValueError(
-                    f"You may only sort by: {', '.join(allowed_field_names)}"
-                )
+                raise ValueError(f"You may only sort by: {', '.join(allowed_field_names)}")
 
         return value
 

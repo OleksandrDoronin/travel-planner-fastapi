@@ -18,42 +18,30 @@ logger = logging.getLogger(__name__)
 class TokenService:
     def __init__(
         self,
-        token_repository: Annotated[
-            TokenBlacklistRepository, Depends(TokenBlacklistRepository)
-        ],
+        token_repository: Annotated[TokenBlacklistRepository, Depends(TokenBlacklistRepository)],
         user_repository: Annotated[UserRepository, Depends(UserRepository)],
     ):
         self.token_repository = token_repository
         self.user_repository = user_repository
 
     @staticmethod
-    def create_access_token(
-        user_id: int, expires_delta: Optional[timedelta] = None
-    ) -> str:
+    def create_access_token(user_id: int, expires_delta: Optional[timedelta] = None) -> str:
         """Creates a new access token."""
         to_encode = {'sub': str(user_id)}
         expire = datetime.now(timezone.utc) + (
-            expires_delta
-            if expires_delta
-            else timedelta(minutes=settings.access_token_expire)
+            expires_delta if expires_delta else timedelta(minutes=settings.access_token_expire)
         )
         to_encode.update({'exp': expire})
-        access_token = jwt.encode(
-            to_encode, settings.jwt_secret_key, settings.algorithm
-        )
+        access_token = jwt.encode(to_encode, settings.jwt_secret_key, settings.algorithm)
         return access_token
 
     @staticmethod
     def create_refresh_token(user_id: int) -> str:
         """Creates a new refresh token."""
         to_encode = {'sub': str(user_id)}
-        expire = datetime.now(timezone.utc) + timedelta(
-            days=settings.refresh_token_expire
-        )
+        expire = datetime.now(timezone.utc) + timedelta(days=settings.refresh_token_expire)
         to_encode.update({'exp': expire})
-        refresh_token = jwt.encode(
-            to_encode, settings.jwt_secret_key, settings.algorithm
-        )
+        refresh_token = jwt.encode(to_encode, settings.jwt_secret_key, settings.algorithm)
         return refresh_token
 
     def get_user_id_from_refresh_token(self, refresh_token: str) -> int:
@@ -101,9 +89,7 @@ class TokenService:
 
         if expiration:
             blacklist_entry = map_refresh_token(token=token, expires_at=expiration)
-            await self.token_repository.add_token_to_blacklist(
-                blacklist_entry=blacklist_entry
-            )
+            await self.token_repository.add_token_to_blacklist(blacklist_entry=blacklist_entry)
         else:
             raise ValueError('Invalid token: Could not extract expiration')
 
@@ -111,9 +97,7 @@ class TokenService:
         """Checks if the token is on the blacklist."""
         return await self.token_repository.is_token_blacklisted(token=token)
 
-    async def refresh_token_and_blacklist(
-        self, refresh_token: str
-    ) -> TokenRefreshResponse:
+    async def refresh_token_and_blacklist(self, refresh_token: str) -> TokenRefreshResponse:
         """
         Refreshes the access token and adds the old refresh token to the blacklist.
         """
@@ -138,6 +122,4 @@ class TokenService:
         # Add the old refresh token to the blacklist
         await self.blacklist_token(token=refresh_token)
 
-        return TokenRefreshResponse(
-            access_token=new_access_token, refresh_token=new_refresh_token
-        )
+        return TokenRefreshResponse(access_token=new_access_token, refresh_token=new_refresh_token)

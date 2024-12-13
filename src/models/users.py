@@ -14,18 +14,14 @@ if TYPE_CHECKING:
 class User(Base):
     __tablename__ = 'users'
 
-    id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     full_name: Mapped[str]
     email: Mapped[str] = mapped_column(String, unique=True, index=True)
     profile_picture: Mapped[Optional[str]]
     bio: Mapped[Optional[str]]
     gender: Mapped[Optional[str]]
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )

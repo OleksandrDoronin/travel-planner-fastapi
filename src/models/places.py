@@ -15,9 +15,7 @@ if TYPE_CHECKING:
 class Place(Base):
     __tablename__ = 'places'
 
-    id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     place_name: Mapped[str]
     city: Mapped[Optional[str]]
     country: Mapped[Optional[str]]
@@ -28,9 +26,7 @@ class Place(Base):
     visit_date: Mapped[Optional[datetime.date]]
     place_type: Mapped[PlaceType] = mapped_column(Enum(PlaceType))
     user_id: Mapped[int] = mapped_column(ForeignKey('users.id', ondelete='CASCADE'))
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
@@ -49,9 +45,7 @@ class Place(Base):
 class PlannedPlace(Base):
     __tablename__ = 'planned_places'
 
-    id: Mapped[int] = mapped_column(
-        Integer, primary_key=True, index=True, autoincrement=True
-    )
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, index=True, autoincrement=True)
     place_name: Mapped[str]
     city: Mapped[Optional[str]]
     country: Mapped[Optional[str]]
@@ -63,9 +57,7 @@ class PlannedPlace(Base):
     planned_status: Mapped[PlannedPlaceStatus] = mapped_column(
         Enum(PlannedPlaceStatus), default=PlannedPlaceStatus.ACTIVE, nullable=False
     )
-    created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True), server_default=func.now()
-    )
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), onupdate=func.now()
     )
