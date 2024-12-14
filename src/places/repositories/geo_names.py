@@ -17,7 +17,7 @@ class GeoRepository:
         Checks whether the location specified by the city and country exists
         using OpenCage API.
         """
-        params = {'q': f'{city}, {country}', 'key': settings.open_cage_data}
+        params = {'q': f'{city}, {country}', 'key': settings.geo_name_data}
 
         try:
             async with httpx.AsyncClient() as client:
