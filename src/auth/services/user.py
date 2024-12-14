@@ -5,7 +5,7 @@ from fastapi import Depends
 
 from src.auth.repositories.social_account import SocialAccountRepository
 from src.auth.repositories.user import UserRepository
-from src.auth.schemas.user_schemas import ExtendedUserResponse
+from src.auth.schemas.user_schemas import ExtendedUserResponse, SocialAccountResponse
 
 
 logger = logging.getLogger(__name__)
@@ -26,8 +26,8 @@ class UserService:
         if not user:
             raise ValueError('User not found')
 
-        social_accounts = await self.social_repository.get_social_accounts_for_user_response(
-            user_id=user.id
+        social_accounts = await self.social_repository.get_social_accounts_for_user(
+            user_id=user.id, response_model=SocialAccountResponse
         )
 
         user_response = ExtendedUserResponse(**user.model_dump(), social_accounts=social_accounts)

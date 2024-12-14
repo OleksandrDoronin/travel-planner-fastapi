@@ -149,7 +149,9 @@ class GoogleAuthService:
         """
         Prepares the response for the Google OAuth callback.
         """
-        social_accounts = await self.social_repository.get_social_accounts_for_user(user_id=user.id)
+        social_accounts = await self.social_repository.get_social_accounts_for_user(
+            user_id=user.id, response_model=SocialAccountLink
+        )
 
         return UserWithSocialAccountsResponse(
             **user.model_dump(),
