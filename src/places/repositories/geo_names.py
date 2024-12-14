@@ -2,6 +2,7 @@ import logging
 
 import httpx
 
+from src.places.constants import OPEN_CAGE_API_URL
 from src.places.exceptions import GeoServiceError
 from src.settings import settings
 
@@ -20,7 +21,7 @@ class GeoRepository:
 
         try:
             async with httpx.AsyncClient() as client:
-                response = await client.get(settings.open_cage_url, params=params)
+                response = await client.get(OPEN_CAGE_API_URL, params=params)
             response.raise_for_status()
             data = response.json()
             if 'results' not in data or len(data['results']) == 0:

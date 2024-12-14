@@ -39,14 +39,11 @@ class SecuritySettings(BaseSettings):
 class OAuthSettings(BaseSettings):
     google_oauth_key: str
     google_oauth_secret: str
-    google_token_url: str
-    google_userinfo_url: str
     google_redirect_uri: str
 
 
 class GeonamesSettings(BaseSettings):
     open_cage_data: str
-    open_cage_url: str
 
 
 class RedisSettings(BaseSettings):

@@ -1,18 +1,17 @@
 import logging
 from typing import Annotated
-from urllib.parse import urlencode, urlunparse
+from urllib.parse import urlencode, urljoin
 
-from cryptography.fernet import Fernet
 from fastapi import Depends
 
-from src.auth.dependencies import get_cypher
-from src.auth.exceptions import GoogleOAuthError
+from src.auth.constants import GOOGLE_OAUTH_BASE_URL
+from src.auth.dependencies import cypher
+from src.auth.exceptions import GoogleOAuthError, GoogleOAuthUrlGenerationError
 from src.auth.repositories.google_oauth import GoogleOAuthRepository
 from src.auth.repositories.social_account import SocialAccountRepository
 from src.auth.repositories.user import UserRepository
 from src.auth.schemas.auth_schemas import (
     GoogleAuthRequest,
-    GoogleCallBackResponse,
     GoogleLoginResponse,
 )
 from src.auth.schemas.google_oauth import GoogleTokenResponse, GoogleUserInfoResponse
@@ -21,9 +20,7 @@ from src.auth.schemas.user_schemas import (
     UserBase,
     UserWithSocialAccountsResponse,
 )
-from src.auth.services.token import TokenService
-from src.auth.utils import encode_token, generate_random_state
-from src.services.cache import CacheService
+from src.auth.utils.security_utils import encode_token
 from src.settings import settings
 
 
@@ -39,22 +36,15 @@ class GoogleAuthService:
         self,
         user_repository: Annotated[UserRepository, Depends(UserRepository)],
         social_repository: Annotated[SocialAccountRepository, Depends(SocialAccountRepository)],
-        token_service: Annotated[TokenService, Depends(TokenService)],
         google_oauth_repo: Annotated[GoogleOAuthRepository, Depends(GoogleOAuthRepository)],
-        cypher: Annotated[Fernet, Depends(get_cypher)],
-        cache_service: Annotated[CacheService, Depends(CacheService)],
     ):
-        self._service = 'google'
         self.user_repository = user_repository
         self.social_repository = social_repository
         self.google_oauth_repo = google_oauth_repo
-        self.token_service = token_service
-        self.cypher = cypher
-        self.cache_service = cache_service
 
     async def handle_google_callback(
         self, code: str, redirect_uri: str, state: str
-    ) -> GoogleCallBackResponse:
+    ) -> UserWithSocialAccountsResponse:
         """
         Handles the Google OAuth callback, fetches tokens, user info,
         and connects the account.
@@ -65,7 +55,7 @@ class GoogleAuthService:
 
         # Fetch tokens and user info
         token_data = await self._fetch_google_tokens(code=code, redirect_uri=redirect_uri)
-        user_info = await self._fetch_google_user_info(access_token=token_data['access_token'])
+        user_info = await self._fetch_google_user_info(access_token=token_data.access_token)
 
         # Create or retrieve user, and link social account
         user = await self._create_or_get_user(user_info=user_info)
@@ -73,24 +63,22 @@ class GoogleAuthService:
             user_info=user_info, token_data=token_data, user_id=user.id
         )
 
-        # Prepare response
         return await self._prepare_callback_response(user=user)
 
-    async def _validate_callback_params(self, code: str, redirect_uri: str, state: str) -> None:
+    @staticmethod
+    async def _validate_callback_params(code: str, redirect_uri: str, state: str) -> None:
         """Validate required parameters for the callback."""
         if not all([code, redirect_uri, state]):
             raise GoogleOAuthError()
-
-        await self.verify_state(state=state)
 
     async def _create_or_get_user(self, user_info: GoogleUserInfoResponse) -> UserBase:
         """
         Creates a UserBase object from Google data and stores it in the database if necessary.
         """
         user = UserBase(
-            email=user_info['email'],
-            full_name=user_info['name'],
-            profile_picture=user_info['picture'],
+            email=user_info.email,
+            full_name=user_info.name,
+            profile_picture=user_info.picture,
         )
         return await self.create_or_get_user(user=user)
 
@@ -126,10 +114,10 @@ class GoogleAuthService:
         Links a social account to the user or updates an existing one.
         """
         social_account = SocialAccountLink(
-            service=self._service,
-            social_account_id=user_info['id'],
-            access_token=encode_token(token_data['access_token'], self.cypher),
-            refresh_token=encode_token(token_data['refresh_token'], self.cypher),
+            service='google',
+            social_account_id=user_info.id,
+            access_token=encode_token(token=token_data.access_token, cypher=cypher),
+            refresh_token=encode_token(token=token_data.refresh_token, cypher=cypher),
             user_id=user_id,
         )
 
@@ -157,56 +145,27 @@ class GoogleAuthService:
         """
         return await self.google_oauth_repo.fetch_user_info(access_token=access_token)
 
-    async def _prepare_callback_response(self, user: UserBase) -> GoogleCallBackResponse:
+    async def _prepare_callback_response(self, user: UserBase) -> UserWithSocialAccountsResponse:
         """
         Prepares the response for the Google OAuth callback.
         """
         social_accounts = await self.social_repository.get_social_accounts_for_user(user_id=user.id)
-        access_token = self.token_service.create_access_token(user_id=user.id)
-        refresh_token = self.token_service.create_refresh_token(user_id=user.id)
 
-        user_response = UserWithSocialAccountsResponse(
+        return UserWithSocialAccountsResponse(
             **user.model_dump(),
             social_accounts=social_accounts,
         )
-        return GoogleCallBackResponse(
-            user=user_response,
-            access_token=access_token,
-            refresh_token=refresh_token,
-        )
-
-    async def verify_state(self, state: str):
-        """Validate that the state matches."""
-        cached_state = await self.cache_service.get_cache(f'google_oauth_state_{state}')
-        if cached_state is None or cached_state.get('state') != state:
-            logger.error('Invalid state parameter. State received: %s', state)
-            raise GoogleOAuthError()
 
 
 class GoogleOAuthUrlGenerator:
-    def __init__(
-        self,
-        cache_service: Annotated[CacheService, Depends(CacheService)],
-    ):
-        self.cache_service = cache_service
-
-    async def generate_auth_url(self, redirect_uri: str) -> tuple[GoogleLoginResponse, str]:
+    async def generate_auth_url(self, redirect_uri: str, state: str) -> GoogleLoginResponse:
         """Generate the Google OAuth URL and manage the state."""
-
-        # Generate and store state in cache
-        state = await self._generate_and_cache_state()
 
         google_auth_url = self._get_google_auth_url(redirect_uri=redirect_uri, state=state)
         if not google_auth_url:
-            raise ValueError('Failed to generate Google OAuth URL')
+            raise GoogleOAuthUrlGenerationError()
 
-        return GoogleLoginResponse(url=google_auth_url), state
-
-    async def _generate_and_cache_state(self) -> str:
-        """Generate a random state and save it to cache."""
-        state = generate_random_state()
-        await self.cache_service.set_cache(f'google_oauth_state_{state}', {'state': state}, ttl=100)
-        return state
+        return GoogleLoginResponse(url=google_auth_url)
 
     def _get_google_auth_url(self, redirect_uri: str, state: str) -> str:
         """Helper to generate the Google OAuth URL."""
@@ -214,16 +173,9 @@ class GoogleOAuthUrlGenerator:
 
         query_params = self._generate_query_params(google_auth_request)
 
-        return urlunparse(
-            (
-                'https',
-                'accounts.google.com',
-                '/o/oauth2/v2/auth',
-                '',
-                urlencode(query_params),
-                '',
-            )
-        )
+        auth_url = urljoin(GOOGLE_OAUTH_BASE_URL, '?' + urlencode(query_params))
+
+        return auth_url
 
     @staticmethod
     def _generate_query_params(google_auth_request: GoogleAuthRequest) -> dict:

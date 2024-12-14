@@ -1,3 +1,4 @@
+from types import SimpleNamespace
 from unittest.mock import patch
 
 import pytest
@@ -26,10 +27,8 @@ async def test_google_login(async_client: AsyncClient):
 @pytest.mark.asyncio
 @patch('src.auth.services.google_oauth.GoogleOAuthRepository.fetch_token')
 @patch('src.auth.services.google_oauth.GoogleOAuthRepository.fetch_user_info')
-@patch('src.auth.services.google_oauth.CacheService.get_cache')
-@patch('src.auth.services.google_oauth.CacheService.set_cache')
+@patch('src.auth.utils.cache_utils.CacheService.get_cache')
 async def test_google_callback_success(
-    mock_set_cache,  # noqa
     mock_get_cache,
     mock_fetch_user_info,
     mock_fetch_token,
@@ -40,16 +39,15 @@ async def test_google_callback_success(
     """
 
     # Mock responses for token and user info
-    mock_fetch_token.return_value = {
-        'access_token': 'valid_access_token',
-        'refresh_token': 'valid_refresh_token',
-    }
-    mock_fetch_user_info.return_value = {
-        'id': '1234567890',
-        'email': 'test_vasya@mail.com',
-        'name': 'Vasya Lupin',
-        'picture': 'https://example.com/avatar.png',
-    }
+    mock_fetch_token.return_value = SimpleNamespace(
+        access_token='valid_access_token', refresh_token='valid_refresh_token'
+    )
+    mock_fetch_user_info.return_value = SimpleNamespace(
+        id='1234567890',
+        email='test_vasya@mail.com',
+        name='Vasya Lupin',
+        picture='https://example.com/avatar.png',
+    )
 
     # Define constants for URLs and test data
     redirect_uri = settings.google_redirect_uri

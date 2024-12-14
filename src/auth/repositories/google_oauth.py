@@ -4,6 +4,7 @@ from typing import Annotated
 from fastapi import Depends
 from httpx import AsyncClient
 
+from src.auth.constants import GOOGLE_TOKEN_URL, GOOGLE_USERINFO_URL
 from src.auth.dependencies import get_async_client
 from src.auth.exceptions import GoogleOAuthError
 from src.auth.schemas.google_oauth import GoogleTokenResponse, GoogleUserInfoResponse
@@ -34,7 +35,7 @@ class GoogleOAuthRepository:
             'grant_type': 'authorization_code',
         }
         try:
-            response_data = await self._post(url=settings.google_token_url, data=payload)
+            response_data = await self._post(url=GOOGLE_TOKEN_URL, data=payload)
             return GoogleTokenResponse(**response_data)
         except Exception:
             raise GoogleOAuthError()
@@ -45,7 +46,7 @@ class GoogleOAuthRepository:
         """
         params = {'access_token': access_token}
         try:
-            response_data = await self._get(url=settings.google_userinfo_url, params=params)
+            response_data = await self._get(url=GOOGLE_USERINFO_URL, params=params)
             return GoogleUserInfoResponse(**response_data)
         except Exception:
             raise GoogleOAuthError()

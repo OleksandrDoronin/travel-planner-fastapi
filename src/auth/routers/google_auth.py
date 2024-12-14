@@ -7,7 +7,7 @@ from pydantic import HttpUrl
 from starlette import status
 
 from src.auth.current_user import get_current_user
-from src.auth.exceptions import GoogleOAuthError
+from src.auth.exceptions import GoogleOAuthError, GoogleOAuthUrlGenerationError
 from src.auth.schemas.auth_schemas import (
     GoogleCallBackResponse,
     GoogleLoginResponse,
@@ -19,6 +19,8 @@ from src.auth.services.google_oauth import (
     GoogleOAuthUrlGenerator,
 )
 from src.auth.services.token import TokenService
+from src.auth.utils.cache_utils import generate_and_cache_state, verify_state
+from src.services.cache import CacheService
 from src.settings import settings
 
 
@@ -35,20 +37,26 @@ async def google_login(
     google_oauth_url_generator: Annotated[
         GoogleOAuthUrlGenerator, Depends(GoogleOAuthUrlGenerator)
     ],
-    redirect_uri: HttpUrl = Query(..., alias='redirect_uri'),
+    cache_service: Annotated[CacheService, Depends(CacheService)],
+    redirect_uri: HttpUrl = Query(alias='redirect_uri'),
 ) -> GoogleLoginResponse:
     """Generate Google OAuth URL and return it along with state."""
 
     try:
-        (
-            google_auth_response,
-            state,
-        ) = await google_oauth_url_generator.generate_auth_url(redirect_uri=redirect_uri)
+        state = await generate_and_cache_state(cache_service=cache_service)
+
+        google_auth_response = await google_oauth_url_generator.generate_auth_url(
+            redirect_uri=redirect_uri, state=state
+        )
+
         return google_auth_response
 
-    except ValueError as e:
-        logger.error(f'Error generating Google OAuth URL: {repr(e)}')
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=str(e))
+    except GoogleOAuthUrlGenerationError:
+        logger.exception('Error generating Google OAuth URL')
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail='An error occurred while processing your request. Please try again later.',
+        )
 
 
 @router.get(
@@ -58,20 +66,32 @@ async def google_login(
 )
 async def google_callback(
     google_auth_service: Annotated[GoogleAuthService, Depends(GoogleAuthService)],
+    cache_service: Annotated[CacheService, Depends(CacheService)],
+    token_service: Annotated[TokenService, Depends(TokenService)],
     redirect_uri: str = Query(settings.google_redirect_uri, description='Redirect uri'),
-    code: str = Query(default=None, description='Authorization code provided by Google'),
-    state: str = Query(None, description='State parameter for CSRF protection'),
+    code: str = Query(description='Authorization code provided by Google'),
+    state: str = Query(description='State parameter for CSRF protection'),
 ) -> GoogleCallBackResponse:
     """Handle the callback from Google OAuth after authorization."""
 
     try:
+        verified_state = await verify_state(cache_service=cache_service, state=state)
+
         # Pass the received parameters to the service for processing
-        callback_response = await google_auth_service.handle_google_callback(
+        user_response = await google_auth_service.handle_google_callback(
             code=code,
             redirect_uri=redirect_uri,
-            state=state,
+            state=verified_state['state'],
         )
-        return callback_response
+
+        new_access_token = token_service.create_access_token(user_id=user_response.id)
+        new_refresh_token = token_service.create_refresh_token(user_id=user_response.id)
+
+        return GoogleCallBackResponse(
+            user=user_response,
+            access_token=new_access_token,
+            refresh_token=new_refresh_token,
+        )
 
     except GoogleOAuthError:
         logger.exception('Google OAuth error occurred.')
