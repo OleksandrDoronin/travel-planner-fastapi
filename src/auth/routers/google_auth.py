@@ -2,12 +2,11 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from jose import JWTError
 from pydantic import HttpUrl
 from starlette import status
 
 from src.auth.current_user import get_current_user
-from src.auth.exceptions import GoogleOAuthError, GoogleOAuthUrlGenerationError
+from src.auth.exceptions import GoogleOAuthError, TokenError
 from src.auth.schemas.auth_schemas import (
     GoogleCallBackResponse,
     GoogleLoginResponse,
@@ -51,11 +50,11 @@ async def google_login(
 
         return google_auth_response
 
-    except GoogleOAuthUrlGenerationError:
+    except GoogleOAuthError as e:
         logger.exception('Error generating Google OAuth URL')
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail='An error occurred while processing your request. Please try again later.',
+            detail=e.message,
         )
 
 
@@ -93,11 +92,17 @@ async def google_callback(
             refresh_token=new_refresh_token,
         )
 
-    except GoogleOAuthError:
+    except GoogleOAuthError as e:
         logger.exception('Google OAuth error occurred.')
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail='An error occurred while processing your request. Please try again later.',
+            detail=e.message,
+        )
+    except TokenError as e:
+        logger.exception('Error with token.')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e.message,
         )
 
 
@@ -118,8 +123,19 @@ async def logout(
         await token_service.blacklist_token(token=token_refresh_request.refresh_token)
         return {'detail': 'Successfully logged out.'}
 
-    except JWTError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    except TokenError as e:
+        logger.exception('Error with token.')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e.message,
+        )
+
+    except GoogleOAuthError as e:
+        logger.exception('Google OAuth error occurred.')
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=e.message,
+        )
 
 
 @router.post(
@@ -140,8 +156,16 @@ async def refresh_token(
         )
         return tokens
 
-    except ValueError as e:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except TokenError as e:
+        logger.exception('Error with token.')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail=e.message,
+        )
 
-    except JWTError as e:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail=str(e))
+    except GoogleOAuthError as e:
+        logger.exception('Google OAuth error occurred.')
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=e.message,
+        )

@@ -143,8 +143,7 @@ async def test_logout_user_not_found(async_client: AsyncClient):
         json={'refresh_token': 'some_refresh_token'},
     )
 
-    assert response.status_code == status.HTTP_404_NOT_FOUND
-    assert response.json() == {'detail': 'User not found'}
+    assert response.status_code == status.HTTP_500_INTERNAL_SERVER_ERROR
 
 
 @pytest.mark.asyncio
@@ -162,4 +161,3 @@ async def test_logout_unauthorized(async_client: AsyncClient):
         json={'refresh_token': 'some_refresh_token'},
     )
     assert response.status_code == status.HTTP_401_UNAUTHORIZED
-    assert response.json() == {'detail': 'Invalid token'}

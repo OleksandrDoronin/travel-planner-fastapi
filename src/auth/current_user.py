@@ -3,9 +3,9 @@ from typing import Annotated
 
 from fastapi import Depends, HTTPException, Security
 from fastapi.security import HTTPAuthorizationCredentials
-from jose import JWTError
 from starlette import status
 
+from src.auth.exceptions import TokenError
 from src.auth.schemas.user_schemas import UserBase
 from src.auth.security import custom_bearer_scheme
 from src.auth.services.token import TokenService
@@ -40,12 +40,12 @@ async def get_current_user(
         user = await user_service.get_user_by_id(user_id=user_id)
         return user
 
-    except JWTError as e:
-        logger.error(f'JWT error: {str(e)}')
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token')
-    except ValueError as e:
-        logger.error(f'Error in UserService: {str(e)}')
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except TokenError:
+        logger.exception('Error with token.')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='An error occurred with token processing. Please check your credentials.',
+        )
 
 
 async def check_token_validity(token: str, token_service: TokenService) -> None:
@@ -56,4 +56,7 @@ async def check_token_validity(token: str, token_service: TokenService) -> None:
 
     """
     if await token_service.is_token_blacklisted(token=token):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail='Invalid token')
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail='An error occurred with token processing. Please check your credentials.',
+        )

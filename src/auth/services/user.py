@@ -3,6 +3,7 @@ from typing import Annotated
 
 from fastapi import Depends
 
+from src.auth.exceptions import GoogleOAuthError
 from src.auth.repositories.social_account import SocialAccountRepository
 from src.auth.repositories.user import UserRepository
 from src.auth.schemas.user_schemas import ExtendedUserResponse, SocialAccountResponse
@@ -24,7 +25,7 @@ class UserService:
         user = await self.user_repository.get_user_by_id(user_id=user_id)
 
         if not user:
-            raise ValueError('User not found')
+            raise GoogleOAuthError()
 
         social_accounts = await self.social_repository.get_social_accounts_for_user(
             user_id=user.id, response_model=SocialAccountResponse

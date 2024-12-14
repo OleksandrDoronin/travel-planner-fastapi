@@ -6,7 +6,7 @@ from fastapi import Depends
 
 from src.auth.constants import GOOGLE_OAUTH_BASE_URL
 from src.auth.dependencies import cypher
-from src.auth.exceptions import GoogleOAuthError, GoogleOAuthUrlGenerationError
+from src.auth.exceptions import GoogleOAuthError
 from src.auth.repositories.google_oauth import GoogleOAuthRepository
 from src.auth.repositories.social_account import SocialAccountRepository
 from src.auth.repositories.user import UserRepository
@@ -165,7 +165,7 @@ class GoogleOAuthUrlGenerator:
 
         google_auth_url = self._get_google_auth_url(redirect_uri=redirect_uri, state=state)
         if not google_auth_url:
-            raise GoogleOAuthUrlGenerationError()
+            raise GoogleOAuthError(message='Failed to generate Google OAuth URL')
 
         return GoogleLoginResponse(url=google_auth_url)
 

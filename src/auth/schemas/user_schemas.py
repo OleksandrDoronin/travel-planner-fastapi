@@ -45,3 +45,8 @@ class ExtendedUserResponse(UserWithSocialAccountsResponse):
 
     bio: str | None = None
     gender: str | None = None
+
+
+class UserFilter(BaseModel):
+    email: str | None = None
+    user_id: int | None = None
