@@ -3,9 +3,9 @@ import logging
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 
+from src.auth.repositories.token_blacklist import TokenBlacklistRepository
 from src.dependencies import get_db
 from src.services.cache import CacheService
-from src.tasks.token_cleanup import remove_expired_tokens
 
 
 logger = logging.getLogger(__name__)
@@ -35,9 +35,11 @@ def add_token_cleanup_task(scheduler):
 
 async def cleanup_task():
     """Cleaning up obsolete tokens."""
-
     async for session in get_db():
-        await remove_expired_tokens(session)
+        repository = TokenBlacklistRepository(db_session=session)
+
+        removed_count = await repository.remove_expired_tokens()
+        logger.info(f'Removed {removed_count} expired tokens.')
 
 
 async def check_redis_connection():

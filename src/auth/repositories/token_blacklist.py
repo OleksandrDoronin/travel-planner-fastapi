@@ -1,12 +1,13 @@
 import logging
+from datetime import datetime, timezone
 from typing import Annotated
 
 from fastapi import Depends
-from sqlalchemy import select
+from sqlalchemy import delete, select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from src.auth.exceptions import GoogleOAuthError
+from src.auth.exceptions import GoogleOAuthError, TokenError
 from src.auth.schemas.auth_schemas import TokenBlacklistRequest
 from src.dependencies import get_db
 from src.models import TokenBlacklist
@@ -44,3 +45,19 @@ class TokenBlacklistRepository:
         except SQLAlchemyError as e:
             logger.error(f'Failed to check if token is blacklisted: {e}')
             raise GoogleOAuthError()
+
+    async def remove_expired_tokens(self) -> int:
+        """Deletes expired tokens and returns the count of removed tokens."""
+        try:
+            query = delete(TokenBlacklist).where(
+                TokenBlacklist.expires_at < datetime.now(timezone.utc)
+            )
+            result = await self.db_session.execute(query)
+            await self.db_session.commit()
+
+            return result.rowcount()
+
+        except SQLAlchemyError as e:
+            await self.db_session.rollback()
+            logger.error(f'Failed to remove expired tokens: {e}')
+            raise TokenError()
