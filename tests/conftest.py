@@ -38,13 +38,13 @@ async def init_db():
         await conn.run_sync(Base.metadata.drop_all)
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 async def async_client() -> AsyncGenerator[AsyncClient, None]:
     async with AsyncClient(transport=ASGITransport(app=app), base_url='http://test') as client:
         yield client
 
 
-@pytest.fixture(scope='session')
+@pytest.fixture(scope='function')
 async def async_session() -> AsyncGenerator[AsyncSession, None]:
     async with async_session_maker() as session:
         yield session

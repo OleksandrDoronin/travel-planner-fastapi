@@ -43,7 +43,7 @@ class OAuthSettings(BaseSettings):
 
 
 class GeonamesSettings(BaseSettings):
-    open_cage_data: str
+    geo_name_data: str
 
 
 class RedisSettings(BaseSettings):

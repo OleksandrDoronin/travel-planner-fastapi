@@ -74,15 +74,22 @@ cp .env.example .env.production
 
 Fill in the `.env` files with appropriate values. Here are some variables you need to set:
 
-- `SECRET_KEY`: Secret key for token generation.
-- `GOOGLE_OAUTH_KEY`: Google OAuth client ID.
-- `GOOGLE_OAUTH_SECRET`: Google OAuth client secret.
-- Other necessary settings like `REDIRECT_URI`, `BASE_URL`, etc.
+- `SECRET_KEY`: Secret key. You can generate it using the following bash command:
+  ```bash
+  python -c "import secrets; print(secrets.token_urlsafe(32))"
+  ```
+- `ENCRYPTION_KEY`: Secret key for encryption. You should generate this key yourself, e.g., using a tool or method appropriate for your application.
+- `JWT_SECRET_KEY`: Secret key for signing JWT tokens. This can be generated in a similar way to the SECRET_KEY above.
+- `GOOGLE_OAUTH_KEY`: Google OAuth client ID. You can get it from the [Google Developer Console](https://console.developers.google.com/).
+- `GOOGLE_OAUTH_SECRET`: Google OAuth client secret. This is also available in the [Google Developer Console](https://console.developers.google.com/).
+- `GOOGLE_REDIRECT_URI`: The URI where Google will redirect after authentication. Set this in the [Google Developer Console](https://console.developers.google.com/).
+- `OPEN_CAGE_DATA`: API key for the OpenCage geocoding service. You can obtain it from [GeoNames](https://www.geonames.org/).
+- Other necessary settings like  etc.
 
-You can find the example `.env` file in the repository:
+For other necessary settings, you can refer to the .env.example file in the repository, which contains the structure and other configuration examples.
 
 - [`.env.example`](./.env.example)
-
+Make sure to replace the placeholders in the .env files with your actual credentials.
 ---
 ### 3. Set the `ENV_FILE` Environment Variable
 
@@ -156,10 +163,17 @@ Use the following commands to start the application in a containerized environme
 ```bash
 docker-compose up --build
 ```
+
+If you want to run the containers in the background, you can add the -d flag:
+
+```bash
+docker-compose up --build -d
+```
+
 ### 2. Stop the Containers
 To stop the running containers:
 ```bash
-docker-compose down
+docker-compose stop
 ```
 ---
 ## 🧪 Testing
@@ -167,6 +181,11 @@ docker-compose down
 The project uses **Pytest** for testing the backend.
 
 ### 1. Run the Tests
+
+Install Pytest using poetry:
+```bash
+poetry install --dev
+```
 
 Activate the Poetry environment and execute the tests:
 
@@ -194,7 +213,7 @@ poetry run pytest --cov=src
 Install Ruff using Poetry:
 
 ```bash
-poetry add --dev ruff
+poetry install --dev
 ```
 
 #### Run Ruff
