@@ -83,7 +83,7 @@ Fill in the `.env` files with appropriate values. Here are some variables you ne
 - `GOOGLE_OAUTH_KEY`: Google OAuth client ID. You can get it from the [Google Developer Console](https://console.developers.google.com/).
 - `GOOGLE_OAUTH_SECRET`: Google OAuth client secret. This is also available in the [Google Developer Console](https://console.developers.google.com/).
 - `GOOGLE_REDIRECT_URI`: The URI where Google will redirect after authentication. Set this in the [Google Developer Console](https://console.developers.google.com/).
-- `OPEN_CAGE_DATA`: API key for the OpenCage geocoding service. You can obtain it from [GeoNames](https://www.geonames.org/).
+- `GEO_NAME_DATA`: API key for the GeoNames geocoding service. You can obtain it from [GeoNames](https://www.geonames.org/).
 - Other necessary settings like  etc.
 
 For other necessary settings, you can refer to the .env.example file in the repository, which contains the structure and other configuration examples.
