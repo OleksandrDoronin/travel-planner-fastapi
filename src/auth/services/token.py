@@ -6,10 +6,9 @@ from fastapi import Depends
 from jose import JWTError, jwt
 
 from src.auth.exceptions import TokenError
-from src.auth.mapper import map_refresh_token
 from src.auth.repositories.token_blacklist import TokenBlacklistRepository
 from src.auth.repositories.user import UserRepository
-from src.auth.schemas.auth_schemas import TokenRefreshResponse
+from src.auth.schemas.auth_schemas import TokenBlacklistRequest, TokenRefreshResponse
 from src.settings import settings
 
 
@@ -119,7 +118,7 @@ class TokenService:
             expiration = self.get_token_expiration(token=token)
 
             if expiration:
-                blacklist_entry = map_refresh_token(token=token, expires_at=expiration)
+                blacklist_entry = TokenBlacklistRequest(token=token, expires_at=expiration)
                 await self.token_repository.add_token_to_blacklist(blacklist_entry=blacklist_entry)
             else:
                 logger.warning('Failed to get expiration for token')
