@@ -5,7 +5,6 @@
 **Travel Planner (Backend)** is the backend service of the Travel Planner project. This service provides functionality for:
 - Managing user profiles.
 - Tracking visited and planned places.
-- Storing photos of locations.
 - Creating a wishlist of future travel destinations.
 
 The project uses **Google OAuth** for secure authentication and integration with user accounts.
