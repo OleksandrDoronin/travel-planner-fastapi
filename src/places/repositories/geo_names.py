@@ -24,10 +24,11 @@ class GeoRepository:
                 response = await client.get(OPEN_CAGE_API_URL, params=params)
             response.raise_for_status()
             data = response.json()
-            if 'results' not in data or len(data['results']) == 0:
+            results = data.get('results', [])
+            if not results:
                 return {}
 
-            return data['results'][0]
+            return results[0]
 
         except httpx.HTTPStatusError as e:
             logger.error(f'HTTP error for {city}, {country}: {e}')

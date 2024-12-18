@@ -9,7 +9,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from src.dependencies import get_db
 from src.models import Place
 from src.places.schemas.filters import PlaceFilter
-from src.places.schemas.places import PlaceCreate, PlaceUpdate
+from src.places.schemas.places import PlaceCreationRequest, PlaceUpdateRequest
 
 
 logger = logging.getLogger('travel_planner_app')
@@ -22,7 +22,7 @@ class PlaceRepository:
     ):
         self.db_session = db_session
 
-    async def create_place(self, user_id, place: PlaceCreate) -> Place:
+    async def create_place(self, user_id, place: PlaceCreationRequest) -> Place:
         place = Place(**place.model_dump())
         place.user_id = user_id
         self.db_session.add(place)
@@ -67,7 +67,7 @@ class PlaceRepository:
         return result.scalars().first()
 
     async def update_place(
-        self, place_id: int, user_id: int, place_data: PlaceUpdate
+        self, place_id: int, user_id: int, place_data: PlaceUpdateRequest
     ) -> Optional[Place]:
         stmt = (
             update(Place)

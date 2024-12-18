@@ -16,7 +16,7 @@ from src.places.exceptions import (
     PlaceAlreadyExistsError,
 )
 from src.places.schemas.filters import PlaceFilter
-from src.places.schemas.places import PlaceCreate, PlaceGet, PlaceUpdate
+from src.places.schemas.places import PlaceCreationRequest, PlaceResponse, PlaceUpdateRequest
 from src.places.services.places import PlaceService
 
 
@@ -27,11 +27,11 @@ logger = logging.getLogger(__name__)
 @router.post(
     '/',
     status_code=status.HTTP_201_CREATED,
-    response_model=PlaceGet,
+    response_model=PlaceResponse,
     summary='Create a new place',
 )
 async def create_place(
-    place_data: Annotated[PlaceCreate, Body(...)],
+    place_data: Annotated[PlaceCreationRequest, Body(...)],
     places_services: Annotated[PlaceService, Depends(PlaceService)],
     current_user: User = Depends(get_current_user),
 ):
@@ -55,7 +55,7 @@ async def create_place(
 @router.get(
     '/',
     status_code=status.HTTP_200_OK,
-    response_model=List[PlaceGet],
+    response_model=List[PlaceResponse],
     summary='Get a list of all places',
 )
 async def get_places(
@@ -80,7 +80,7 @@ async def get_places(
 @router.get(
     '/{place_id}',
     status_code=status.HTTP_200_OK,
-    response_model=PlaceGet,
+    response_model=PlaceResponse,
     summary='Retrieve a specific place by ID',
 )
 async def get_place_by_id(
@@ -99,11 +99,11 @@ async def get_place_by_id(
 @router.put(
     '/{place_id}',
     status_code=status.HTTP_201_CREATED,
-    response_model=PlaceGet,
+    response_model=PlaceResponse,
     summary='Update a a specific place by ID',
 )
 async def update_place_by_id(
-    place_data: Annotated[PlaceUpdate, Body(...)],
+    place_data: Annotated[PlaceUpdateRequest, Body(...)],
     current_user: Annotated[User, Depends(get_current_user)],
     place_service: Annotated[PlaceService, Depends(PlaceService)],
     place_id: int,

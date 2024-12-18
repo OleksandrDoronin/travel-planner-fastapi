@@ -4,10 +4,10 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, conint, constr, field_validator
 
 from src.enums.places import PlaceRating, PlaceType
-from src.places.utils import check_future_date
+from src.places.utils.date_utils import check_future_date
 
 
-class PlaceCreate(BaseModel):
+class PlaceCreationRequest(BaseModel):
     """Schema for creating a place with field restrictions."""
 
     place_name: constr(min_length=3, max_length=100)
@@ -27,7 +27,7 @@ class PlaceCreate(BaseModel):
         return check_future_date(visit_date=visit_data)
 
 
-class PlaceGet(BaseModel):
+class PlaceResponse(BaseModel):
     """Schema for retrieving a place with fields returned from the database."""
 
     id: int
@@ -46,7 +46,7 @@ class PlaceGet(BaseModel):
     model_config = ConfigDict(use_enum_values=True, from_attributes=True)
 
 
-class PlaceUpdate(BaseModel):
+class PlaceUpdateRequest(BaseModel):
     """Schema for updating a place with optional fields."""
 
     place_name: Optional[constr(min_length=3, max_length=100)] = None

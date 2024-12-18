@@ -7,8 +7,8 @@ from src.places.exceptions import LocationValidationError, PlaceAlreadyExistsErr
 from src.places.repositories.geo_names import GeoRepository
 from src.places.repositories.places import PlaceRepository
 from src.places.schemas.filters import PlaceFilter
-from src.places.schemas.places import PlaceCreate, PlaceGet, PlaceUpdate
-from src.places.utils import format_title_case
+from src.places.schemas.places import PlaceCreationRequest, PlaceResponse, PlaceUpdateRequest
+from src.places.utils.location_utils import format_location, generate_cache_key, is_location_valid
 from src.services.cache import CacheService
 
 
@@ -26,36 +26,37 @@ class PlaceService:
         self.geo_repository = geo_repository
         self.cache_service = cache_service
 
-    async def create_place(self, user_id: int, place_data: PlaceCreate) -> PlaceGet:
+    async def create_place(self, user_id: int, place_data: PlaceCreationRequest) -> PlaceResponse:
         """
-        Creates a new location after validating and formatting the data.
+        Creates a new place after validating and formatting the data.
 
-        This method validates the location data (city and country),
-        ensures the place is unique for the user, and then creates a new place entry.
+        Validates the location (city and country), checks for uniqueness,
+        and then creates a new place entry.
         """
 
         # Format the city and country before validation
-        formatted_city, formatted_country = self._format_location(
+        formatted_city, formatted_country = format_location(
             city=place_data.city, country=place_data.country
         )
+
         # Validate the city and country
         await self._validate_location(city=formatted_city, country=formatted_country)
 
-        # Ensure that the place is unique for this user
+        # Ensure that the place is unique for the user
         await self._ensure_place_is_unique(
             user_id=user_id, place_data=place_data, formatted_city=formatted_city
         )
 
         place = await self.place_repository.create_place(place=place_data, user_id=user_id)
-        return PlaceGet.model_validate(place)
+
+        return PlaceResponse.model_validate(place)
 
     async def _ensure_place_is_unique(
-        self, user_id: int, place_data: PlaceCreate, formatted_city: str
+        self, user_id: int, place_data: PlaceCreationRequest, formatted_city: str
     ) -> None:
         """
         Ensures that the place is unique for the user by checking if it already exists.
         """
-
         existing_place = await self.place_repository.get_place_by_details(
             user_id=user_id,
             place_name=place_data.place_name,
@@ -72,27 +73,22 @@ class PlaceService:
 
     async def _validate_location(self, city: str, country: str) -> None:
         """
-        Validates city and country using the geo repository or cache.
+        Validates the city and country using the geo repository or cache.
         """
-
-        location_data = await self._get_location_data_from_cache_or_api(city=city, country=country)
+        location_data = await self._get_location_data(city=city, country=country)
         components = location_data.get('components', {})
-        if not self._is_location_valid(components, city, country):
+
+        if not is_location_valid(components=components, city=city, country=country):
             raise LocationValidationError(city=city, country=country)
 
-    async def _get_location_data_from_cache_or_api(self, city: str, country: str):
+    async def _get_location_data(self, city: str, country: str) -> dict[str, str]:
         """
-        Tries to get the location data from cache, if not available calls
-        the geo repository.
+        Retrieves location data from cache or geo repository.
 
-        This method first checks the cache for location data. If it's not found,
-        it queries the geo repository and stores the result in the cache.
+        If the data is not in the cache, fetches it from the geo repository and
+        stores it in the cache.
         """
-        # Generate a cache key
-        cache_key = f'geo_{city}_{country}'
-
-        # Attempt to get the data from the cache
-        cached_data = await self.cache_service.get_cache(key=cache_key)
+        cached_data = await self._get_cache_data(city=city, country=country)
         if cached_data:
             return cached_data
 
@@ -101,49 +97,41 @@ class PlaceService:
             raise LocationValidationError(city=city, country=country)
 
         # Store the data in the cache
+        cache_key = generate_cache_key(city=city, country=country)
         await self.cache_service.set_cache(key=cache_key, value=location_data)
+
         return location_data
 
-    @staticmethod
-    def _is_location_valid(components: dict, city: str, country: str) -> bool:
+    async def _get_cache_data(self, city: str, country: str) -> dict[str, str] | None:
         """
-        Checks if the API response matches the provided city and country.
+        Retrieves the location data from the cache using the generated key.
         """
+        cache_key = generate_cache_key(city=city, country=country)
 
-        return (
-            components.get('city', '').lower() == city.lower()
-            and components.get('country', '').lower() == country.lower()
-        )
-
-    @staticmethod
-    def _format_location(city: str, country: str) -> tuple[str, str]:
-        """
-        Formats the city and country into title case.
-        """
-        return format_title_case(value=city), format_title_case(value=country)
+        return await self.cache_service.get_cache(key=cache_key)
 
     async def get_places(
         self, user_id: int, filters: PlaceFilter, offset: int, limit: int
-    ) -> list[PlaceGet]:
+    ) -> list[PlaceResponse]:
         places = await self.place_repository.get_places_by_user(
             user_id=user_id, filters=filters, offset=offset, limit=limit
         )
-        return [PlaceGet.model_validate(place) for place in places]
+        return [PlaceResponse.model_validate(place) for place in places]
 
-    async def get_place_by_id(self, place_id: int, user_id: int) -> PlaceGet:
+    async def get_place_by_id(self, place_id: int, user_id: int) -> PlaceResponse:
         place = await self.place_repository.get_place_by_id(place_id=place_id, user_id=user_id)
         if not place:
             raise ValueError(f'Place with ID {place_id} not found.')
-        return PlaceGet.model_validate(place)
+        return PlaceResponse.model_validate(place)
 
-    async def update_place_by_id(self, place_id: int, user_id: int, place_data: PlaceUpdate):
+    async def update_place_by_id(self, place_id: int, user_id: int, place_data: PlaceUpdateRequest):
         """
         Updates the place by ID, ensuring that city and country
         are properly formatted and validated.
         """
 
         # Format the city and country before validation
-        formatted_city, formatted_country = self._format_location(
+        formatted_city, formatted_country = format_location(
             city=place_data.city, country=place_data.country
         )
         # Validate the city and country
@@ -154,7 +142,7 @@ class PlaceService:
         )
         if not place:
             raise ValueError(f'Place with ID {place_id} not found or is not owned by user.')
-        return PlaceGet.model_validate(place)
+        return PlaceResponse.model_validate(place)
 
     async def delete_place_by_id(self, place_id: int, user_id: int) -> None:
         deleted = await self.place_repository.delete(place_id=place_id, user_id=user_id)
