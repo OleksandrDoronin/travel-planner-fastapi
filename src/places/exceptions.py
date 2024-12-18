@@ -1,4 +1,21 @@
-class LocationValidationError(Exception):
+class PlaceError(Exception):
+    """Base class for all exceptions related to places."""
+
+    def __init__(self, message: str = 'An error occurred while processing the place.'):
+        super().__init__(message)
+        self.message = message
+
+
+class PlaceNotFoundError(PlaceError):
+    """Exception raised when the place is not found or is not owned by the user."""
+
+    def __init__(self, place_id: int):
+        self.message = f'Place with ID {place_id} not found or is not owned by the user.'
+
+        super().__init__(self.message)
+
+
+class LocationValidationError(PlaceError):
     """Exception raised when location validation fails."""
 
     def __init__(self, city: str, country: str):
@@ -8,7 +25,7 @@ class LocationValidationError(Exception):
         super().__init__(self.message)
 
 
-class PlaceAlreadyExistsError(Exception):
+class PlaceAlreadyExistsError(PlaceError):
     """Exception raised when the place already exists for the user."""
 
     def __init__(self, place_name: str, city: str, place_type: str):

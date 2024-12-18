@@ -3,7 +3,11 @@ from typing import Annotated
 
 from fastapi import Depends
 
-from src.places.exceptions import LocationValidationError, PlaceAlreadyExistsError
+from src.places.exceptions import (
+    LocationValidationError,
+    PlaceAlreadyExistsError,
+    PlaceNotFoundError,
+)
 from src.places.repositories.geo_names import GeoRepository
 from src.places.repositories.places import PlaceRepository
 from src.places.schemas.filters import PlaceFilter
@@ -113,23 +117,31 @@ class PlaceService:
     async def get_places(
         self, user_id: int, filters: PlaceFilter, offset: int, limit: int
     ) -> list[PlaceResponse]:
+        """
+        Retrieves a list of places for a given user with the provided filters,
+        offset, and limit for pagination.
+        """
         places = await self.place_repository.get_places_by_user(
             user_id=user_id, filters=filters, offset=offset, limit=limit
         )
+
         return [PlaceResponse.model_validate(place) for place in places]
 
     async def get_place_by_id(self, place_id: int, user_id: int) -> PlaceResponse:
+        """
+        Retrieves a place by its ID and user ID.
+        """
         place = await self.place_repository.get_place_by_id(place_id=place_id, user_id=user_id)
         if not place:
-            raise ValueError(f'Place with ID {place_id} not found.')
+            raise PlaceNotFoundError(place_id=place_id)
+
         return PlaceResponse.model_validate(place)
 
     async def update_place_by_id(self, place_id: int, user_id: int, place_data: PlaceUpdateRequest):
         """
-        Updates the place by ID, ensuring that city and country
-        are properly formatted and validated.
+        Updates an existing place by its ID, ensuring that the city and country
+        are properly formatted and validated before saving the changes.
         """
-
         # Format the city and country before validation
         formatted_city, formatted_country = format_location(
             city=place_data.city, country=place_data.country
@@ -137,14 +149,19 @@ class PlaceService:
         # Validate the city and country
         await self._validate_location(city=formatted_city, country=formatted_country)
 
+        # Perform the update in the repository.
         place = await self.place_repository.update_place(
             place_id=place_id, user_id=user_id, place_data=place_data
         )
         if not place:
-            raise ValueError(f'Place with ID {place_id} not found or is not owned by user.')
+            raise PlaceNotFoundError(place_id=place_id)
+
         return PlaceResponse.model_validate(place)
 
     async def delete_place_by_id(self, place_id: int, user_id: int) -> None:
-        deleted = await self.place_repository.delete(place_id=place_id, user_id=user_id)
+        """
+        Deletes a place by its ID, ensuring that the place exists and is owned by the user.
+        """
+        deleted = await self.place_repository.delete_place(place_id=place_id, user_id=user_id)
         if not deleted:
-            raise ValueError(f'Place with ID {place_id} not found or is not owned by user.')
+            raise PlaceNotFoundError(place_id=place_id)

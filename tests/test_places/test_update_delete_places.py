@@ -44,7 +44,7 @@ async def test_update_place_by_id(async_client: AsyncClient, mock_user, mock_pla
     )
 
     # Check that the data has been updated correctly
-    assert response.status_code == status.HTTP_201_CREATED
+    assert response.status_code == status.HTTP_200_OK
     response_data = response.json()
     assert response_data['place_name'] == 'My update place'
     assert response_data['city'] == 'Paris'

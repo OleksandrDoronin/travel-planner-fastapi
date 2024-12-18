@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated, List
+from typing import Annotated
 
 from fastapi import APIRouter, Body, HTTPException
 from fastapi.params import Depends
@@ -14,6 +14,8 @@ from src.places.exceptions import (
     GeoServiceError,
     LocationValidationError,
     PlaceAlreadyExistsError,
+    PlaceError,
+    PlaceNotFoundError,
 )
 from src.places.schemas.filters import PlaceFilter
 from src.places.schemas.places import PlaceCreationRequest, PlaceResponse, PlaceUpdateRequest
@@ -42,20 +44,27 @@ async def create_place(
     except (PlaceAlreadyExistsError, LocationValidationError) as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            detail=e.message,
         )
 
     except GeoServiceError as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=str(e),
+            detail=e.message,
+        )
+
+    except PlaceError as e:
+        logger.exception('Place error occurred while creating a place.')
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=e.message,
         )
 
 
 @router.get(
     '/',
     status_code=status.HTTP_200_OK,
-    response_model=List[PlaceResponse],
+    response_model=list[PlaceResponse],
     summary='Get a list of all places',
 )
 async def get_places(
@@ -72,9 +81,16 @@ async def get_places(
             limit=pagination.limit,
         )
 
-    except ValueError as e:
-        logger.error(f'Value error: {repr(e)}')
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except PlaceNotFoundError as e:
+        logger.exception('Place not found while retrieving places.')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+
+    except PlaceError as e:
+        logger.exception('Place error occurred while retrieving places.')
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=e.message,
+        )
 
 
 @router.get(
@@ -91,16 +107,23 @@ async def get_place_by_id(
     try:
         return await place_service.get_place_by_id(place_id=place_id, user_id=current_user.id)
 
-    except ValueError as e:
-        logger.error(f'Value error: {repr(e)}')
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except PlaceNotFoundError as e:
+        logger.exception(f'Place with ID {place_id} not found.')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+
+    except PlaceError as e:
+        logger.exception('Place error occurred while retrieving place by ID.')
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=e.message,
+        )
 
 
 @router.put(
     '/{place_id}',
-    status_code=status.HTTP_201_CREATED,
+    status_code=status.HTTP_200_OK,
     response_model=PlaceResponse,
-    summary='Update a a specific place by ID',
+    summary='Update a specific place by ID',
 )
 async def update_place_by_id(
     place_data: Annotated[PlaceUpdateRequest, Body(...)],
@@ -114,14 +137,21 @@ async def update_place_by_id(
         )
         return updated_place
 
-    except ValueError as e:
-        logger.error(f'Value error: {repr(e)}')
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except PlaceNotFoundError as e:
+        logger.exception(f'Place with ID {place_id} not found for update.')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
 
     except LocationValidationError as e:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=str(e),
+            detail=e.message,
+        )
+
+    except PlaceError as e:
+        logger.exception('Place error occurred while updating the place.')
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=e.message,
         )
 
 
@@ -138,6 +168,10 @@ async def delete_place_by_id(
     try:
         await place_service.delete_place_by_id(place_id=place_id, user_id=current_user.id)
 
-    except ValueError as e:
-        logger.error(f'Value error: {repr(e)}')
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=str(e))
+    except PlaceNotFoundError as e:
+        logger.exception(f'Place with ID {place_id} not found for deletion.')
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=e.message)
+
+    except PlaceError as e:
+        logger.exception('Place error occurred while deleting the place.')
+        raise HTTPException(status_code=status.HTTP_500_INTERNAL_SERVER_ERROR, detail=e.message)

@@ -50,7 +50,9 @@ async def test_get_place_by_id_invalid(async_client: AsyncClient, mock_user, moc
     url = f'api/v1/places/{11111111111}'
     response = await async_client.get(url, headers={'Authorization': f'Bearer {token}'})
     assert response.status_code == 404
-    assert response.json() == {'detail': 'Place with ID 11111111111 not found.'}
+    assert response.json() == {
+        'detail': 'Place with ID 11111111111 not found or is not owned by the user.'
+    }
 
 
 @pytest.mark.asyncio
