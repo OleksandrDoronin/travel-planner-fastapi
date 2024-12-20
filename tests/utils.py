@@ -2,10 +2,7 @@ from datetime import datetime, timedelta, timezone
 
 from jose import jwt
 
-from src.settings import get_settings
-
-
-settings = get_settings()
+from src.settings import settings
 
 
 def create_test_token(user_id: int) -> str:

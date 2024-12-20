@@ -1,5 +1,5 @@
 import logging
-from typing import Annotated, Optional
+from typing import Annotated
 
 from fastapi import Depends
 from sqlalchemy import select
@@ -20,7 +20,7 @@ class UserRepository:
     def __init__(self, db_session: Annotated[AsyncSession, Depends(get_db)]):
         self.db_session = db_session
 
-    async def get_user(self, filters: UserFilter) -> Optional[UserBase]:
+    async def get_user(self, filters: UserFilter) -> UserBase | None:
         """Get a user by given filters."""
         try:
             stmt = select(User).options(joinedload(User.social_accounts))
@@ -40,13 +40,13 @@ class UserRepository:
             logger.error(f'Failed to get user: {str(e)}')
             raise GoogleOAuthError()
 
-    async def get_user_by_email(self, email: str) -> Optional[UserBase]:
+    async def get_user_by_email(self, email: str) -> UserBase | None:
         """Get a user by email."""
         filters = UserFilter(email=email)
 
         return await self.get_user(filters)
 
-    async def get_user_by_id(self, user_id: int) -> Optional[UserBase]:
+    async def get_user_by_id(self, user_id: int) -> UserBase | None:
         """Get a user by ID."""
         filters = UserFilter(user_id=user_id)
 

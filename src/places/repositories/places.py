@@ -14,7 +14,7 @@ from src.places.schemas.filters import PlaceFilter
 from src.places.schemas.places import PlaceCreationRequest, PlaceUpdateRequest
 
 
-logger = logging.getLogger('travel_planner_app')
+logger = logging.getLogger(__name__)
 
 
 class PlaceRepository:

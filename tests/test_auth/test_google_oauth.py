@@ -5,11 +5,8 @@ import pytest
 from httpx import AsyncClient
 from starlette import status
 
-from src.settings import get_settings
+from src.settings import settings
 from tests.utils import create_test_token
-
-
-settings = get_settings()
 
 
 @pytest.mark.asyncio
