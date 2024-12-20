@@ -2,7 +2,6 @@ import logging
 from typing import Annotated
 
 from fastapi import APIRouter, Body, Depends, HTTPException, Query
-from pydantic import HttpUrl
 from starlette import status
 
 from src.auth.current_user import get_current_user
@@ -37,7 +36,7 @@ async def google_login(
         GoogleOAuthUrlGenerator, Depends(GoogleOAuthUrlGenerator)
     ],
     cache_service: Annotated[CacheService, Depends(CacheService)],
-    redirect_uri: HttpUrl = Query(alias='redirect_uri'),
+    redirect_uri: str = Query(alias='redirect_uri'),
 ) -> GoogleLoginResponse:
     """Generate Google OAuth URL and return it along with state."""
 
