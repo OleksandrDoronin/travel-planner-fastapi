@@ -3,10 +3,9 @@ import logging
 
 import redis.asyncio as redis
 
-from src.settings import get_settings
+from src.settings import settings
 
 
-settings = get_settings()
 logger = logging.getLogger(__name__)
 
 

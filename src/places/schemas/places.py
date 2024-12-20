@@ -1,5 +1,4 @@
 from datetime import date, datetime
-from typing import Optional
 
 from pydantic import BaseModel, ConfigDict, conint, constr, field_validator
 
@@ -11,13 +10,13 @@ class PlaceCreationRequest(BaseModel):
     """Schema for creating a place with field restrictions."""
 
     place_name: constr(min_length=3, max_length=100)
-    city: Optional[str] = None
-    country: Optional[str] = None
-    description: Optional[constr(min_length=0, max_length=500)] = None
-    photo_url: Optional[str] = None
-    rating: Optional[PlaceRating] = None
-    days_spent: Optional[conint(ge=0, le=365)] = None
-    visit_date: Optional[date] = None
+    city: str | None = None
+    country: str | None = None
+    description: constr(min_length=0, max_length=500) | None = None
+    photo_url: str | None = None
+    rating: PlaceRating | None = None
+    days_spent: conint(ge=0, le=365) | None = None
+    visit_date: date | None = None
     place_type: PlaceType
 
     model_config = ConfigDict(use_enum_values=True)
@@ -34,11 +33,11 @@ class PlaceResponse(BaseModel):
     place_name: str
     city: str
     country: str
-    description: Optional[str] = None
-    photo_url: Optional[str] = None
-    rating: Optional[PlaceRating] = None
-    days_spent: Optional[int] = None
-    visit_date: Optional[date] = None
+    description: str | None = None
+    photo_url: str | None = None
+    rating: PlaceRating | None = None
+    days_spent: int | None = None
+    visit_date: date | None = None
     place_type: PlaceType
     created_at: datetime
     updated_at: datetime
@@ -49,15 +48,15 @@ class PlaceResponse(BaseModel):
 class PlaceUpdateRequest(BaseModel):
     """Schema for updating a place with optional fields."""
 
-    place_name: Optional[constr(min_length=3, max_length=100)] = None
-    city: Optional[str] = None
-    country: Optional[str] = None
-    description: Optional[constr(min_length=0, max_length=500)] = None
-    photo_url: Optional[str] = None
-    rating: Optional[PlaceRating] = None
-    days_spent: Optional[conint(ge=0, le=365)] = None
-    visit_date: Optional[date] = None
-    place_type: Optional[PlaceType] = None
+    place_name: constr(min_length=3, max_length=100) | None = None
+    city: str | None = None
+    country: str | None = None
+    description: constr(min_length=0, max_length=500) | None = None
+    photo_url: str | None = None
+    rating: PlaceRating | None = None
+    days_spent: conint(ge=0, le=365) | None = None
+    visit_date: date | None = None
+    place_type: PlaceType | None = None
 
     model_config = ConfigDict(use_enum_values=True, from_attributes=True)
 

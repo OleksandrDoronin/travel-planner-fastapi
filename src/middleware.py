@@ -6,10 +6,9 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 
-from src.settings import get_settings
+from src.settings import settings
 
 
-settings = get_settings()
 logger = logging.getLogger(__name__)
 
 
