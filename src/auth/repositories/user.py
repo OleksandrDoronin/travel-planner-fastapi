@@ -2,6 +2,7 @@ import logging
 from typing import Annotated
 
 from fastapi import Depends
+from pydantic import EmailStr
 from sqlalchemy import select
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -40,11 +41,11 @@ class UserRepository:
             logger.error(f'Failed to get user: {str(e)}')
             raise GoogleOAuthError()
 
-    async def get_user_by_email(self, email: str) -> UserBase | None:
+    async def get_user_by_email(self, email: EmailStr) -> UserBase | None:
         """Get a user by email."""
         filters = UserFilter(email=email)
 
-        return await self.get_user(filters)
+        return await self.get_user(filters=filters)
 
     async def get_user_by_id(self, user_id: int) -> UserBase | None:
         """Get a user by ID."""

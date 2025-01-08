@@ -37,7 +37,7 @@ class UserWithSocialAccountsResponse(UserBase):
     """Response model for a user, including linked social accounts."""
 
     id: int | None = None
-    social_accounts: list[SocialAccountResponse] = []
+    social_accounts: list[SocialAccountResponse]
 
 
 class ExtendedUserResponse(UserWithSocialAccountsResponse):
@@ -48,5 +48,5 @@ class ExtendedUserResponse(UserWithSocialAccountsResponse):
 
 
 class UserFilter(BaseModel):
-    email: str | None = None
+    email: EmailStr | None = None
     user_id: int | None = None

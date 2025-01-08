@@ -1,6 +1,6 @@
 from datetime import datetime
 
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, HttpUrl
 
 from src.auth.schemas.user_schemas import UserWithSocialAccountsResponse
 
@@ -8,7 +8,7 @@ from src.auth.schemas.user_schemas import UserWithSocialAccountsResponse
 class GoogleAuthRequest(BaseModel):
     """Schema for Google authentication request parameters."""
 
-    redirect_uri: str
+    redirect_uri: HttpUrl
     state: str
 
 
