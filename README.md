@@ -23,7 +23,8 @@ The backend is built using the following technologies:
 - **Pytest**: Testing framework for ensuring application reliability.
 - **Ruff**: Linter for Python code to ensure code quality and adherence to standards.
 - **Geo API**: For geographical data processing and integration.
-
+- **OpenAI API**: For AI-powered features and integrations.
+- **PydanticAI**: Make it less painful to build production grade applications with Generative AI.
 ---
 
 ## 🚀 Installation
@@ -83,6 +84,8 @@ Fill in the `.env` files with appropriate values. Here are some variables you ne
 - `GOOGLE_OAUTH_SECRET`: Google OAuth client secret. This is also available in the [Google Developer Console](https://console.developers.google.com/).
 - `GOOGLE_REDIRECT_URI`: The URI where Google will redirect after authentication. Set this in the [Google Developer Console](https://console.developers.google.com/).
 - `GEO_NAME_DATA`: API key for the GeoNames geocoding service. You can obtain it from [GeoNames](https://www.geonames.org/).
+- `OPENAI_API_KEY`: API key for the OpenAI API. You can obtain it from [OpenAI](https://platform.openai.com/).
+- `PYDANTIC_AI_MODEL`: Model name for PydanticAI. You can obtain it from the [PydanticAI](https://ai.pydantic.dev/api/models/base/).
 - Other necessary settings like  etc.
 
 For other necessary settings, you can refer to the .env.example file in the repository, which contains the structure and other configuration examples.
