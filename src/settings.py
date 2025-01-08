@@ -5,7 +5,7 @@ from dotenv import load_dotenv
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-env_file = os.getenv('ENV_FILE')
+env_file = os.getenv('ENV_FILE', '.env')
 load_dotenv(dotenv_path=env_file)
 
 
@@ -50,12 +50,18 @@ class RedisSettings(BaseSettings):
     redis_url: str
 
 
+class OpenaiSettings(BaseSettings):
+    openai_api_key: str
+    pydantic_ai_model: str
+
+
 class Settings(
     DatabaseSettings,
     SecuritySettings,
     OAuthSettings,
     GeonamesSettings,
     RedisSettings,
+    OpenaiSettings,
 ):
     model_config = SettingsConfigDict(
         env_file=env_file,
@@ -64,7 +70,7 @@ class Settings(
 
 @lru_cache
 def get_settings() -> Settings:
-    return Settings()
+    return Settings()  # noqa
 
 
 settings = get_settings()

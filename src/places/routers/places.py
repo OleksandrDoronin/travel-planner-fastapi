@@ -13,6 +13,7 @@ from src.pagination import PaginationParams
 from src.places.exceptions import (
     GeoServiceError,
     LocationValidationError,
+    OpenAIError,
     PlaceAlreadyExistsError,
     PlaceError,
     PlaceNotFoundError,
@@ -55,6 +56,12 @@ async def create_place(
 
     except PlaceError as e:
         logger.exception('Place error occurred while creating a place.')
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=e.message,
+        )
+    except OpenAIError as e:
+        logger.exception('OpenAI error occurred while creating a place.')
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=e.message,

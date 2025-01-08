@@ -45,3 +45,9 @@ class GeoServiceError(Exception):
     def __init__(self, message='Geo service error occurred. Please try again later.'):
         self.message = message
         super().__init__(self.message)
+
+
+class OpenAIError(Exception):
+    def __init__(self, message: str = 'An error occurred with OpenAI'):
+        self.message = message
+        super().__init__(self.message)

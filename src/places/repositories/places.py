@@ -24,12 +24,17 @@ class PlaceRepository:
     ):
         self.db_session = db_session
 
-    async def create_place(self, user_id: int, place: PlaceCreationRequest) -> Place:
+    async def create_place(
+        self, user_id: int, place: PlaceCreationRequest, description: str
+    ) -> Place:
         """
         Creates a new place for the user.
         """
         try:
-            place = Place(**place.model_dump())
+            place_data_dict = place.model_dump()
+            place_data_dict['description'] = description
+
+            place = Place(**place_data_dict)
             place.user_id = user_id
 
             self.db_session.add(place)

@@ -13,7 +13,6 @@ class PlaceCreationRequest(BaseModel):
     place_name: constr(min_length=3, max_length=100)
     city: Optional[str] = None
     country: Optional[str] = None
-    description: Optional[constr(min_length=0, max_length=500)] = None
     photo_url: Optional[str] = None
     rating: Optional[PlaceRating] = None
     days_spent: Optional[conint(ge=0, le=365)] = None

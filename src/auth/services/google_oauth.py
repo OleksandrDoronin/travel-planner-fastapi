@@ -3,6 +3,7 @@ from typing import Annotated
 from urllib.parse import urlencode, urljoin
 
 from fastapi import Depends
+from pydantic import HttpUrl
 
 from src.auth.constants import GOOGLE_OAUTH_BASE_URL
 from src.auth.dependencies import cypher
@@ -160,7 +161,7 @@ class GoogleAuthService:
 
 
 class GoogleOAuthUrlGenerator:
-    async def generate_auth_url(self, redirect_uri: str, state: str) -> GoogleLoginResponse:
+    async def generate_auth_url(self, redirect_uri: HttpUrl, state: str) -> GoogleLoginResponse:
         """Generate the Google OAuth URL and manage the state."""
 
         google_auth_url = self._get_google_auth_url(redirect_uri=redirect_uri, state=state)
@@ -169,7 +170,7 @@ class GoogleOAuthUrlGenerator:
 
         return GoogleLoginResponse(url=google_auth_url)
 
-    def _get_google_auth_url(self, redirect_uri: str, state: str) -> str:
+    def _get_google_auth_url(self, redirect_uri: HttpUrl, state: str) -> str:
         """Helper to generate the Google OAuth URL."""
         google_auth_request = GoogleAuthRequest(redirect_uri=redirect_uri, state=state)
 

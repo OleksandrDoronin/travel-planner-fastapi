@@ -5,14 +5,17 @@ from fastapi import Depends
 
 from src.places.exceptions import (
     LocationValidationError,
+    OpenAIError,
     PlaceAlreadyExistsError,
     PlaceNotFoundError,
 )
 from src.places.repositories.geo_names import GeoRepository
+from src.places.repositories.openai import DescriptionOpenAIRepository
 from src.places.repositories.places import PlaceRepository
 from src.places.schemas.filters import PlaceFilter
 from src.places.schemas.places import PlaceCreationRequest, PlaceResponse, PlaceUpdateRequest
 from src.places.utils.location_utils import format_location, generate_cache_key, is_location_valid
+from src.places.utils.prompts import generate_description_prompt
 from src.services.cache import CacheService
 
 
@@ -25,10 +28,14 @@ class PlaceService:
         place_repository: Annotated[PlaceRepository, Depends(PlaceRepository)],
         geo_repository: Annotated[GeoRepository, Depends(GeoRepository)],
         cache_service: Annotated[CacheService, Depends(CacheService)],
+        openai_repository: Annotated[
+            DescriptionOpenAIRepository, Depends(DescriptionOpenAIRepository)
+        ],
     ):
         self.place_repository = place_repository
         self.geo_repository = geo_repository
         self.cache_service = cache_service
+        self.openai_repository = openai_repository
 
     async def create_place(self, user_id: int, place_data: PlaceCreationRequest) -> PlaceResponse:
         """
@@ -51,9 +58,38 @@ class PlaceService:
             user_id=user_id, place_data=place_data, formatted_city=formatted_city
         )
 
-        place = await self.place_repository.create_place(place=place_data, user_id=user_id)
+        # Generate description for the place
+        description = await self._generate_description(
+            place_data=place_data, city=formatted_city, country=formatted_country
+        )
+
+        place = await self.place_repository.create_place(
+            place=place_data, user_id=user_id, description=description
+        )
 
         return PlaceResponse.model_validate(place)
+
+    async def _generate_description(
+        self, place_data: PlaceCreationRequest, city: str, country: str
+    ) -> str:
+        """
+        Generates a description for a place using OpenAI.
+        """
+        description_prompt = generate_description_prompt(
+            place_name=place_data.place_name,
+            city=city,
+            country=country,
+        )
+
+        try:
+            description_response = await self.openai_repository.get_description(
+                prompt=description_prompt
+            )
+            return description_response.description
+
+        except Exception as e:
+            logger.error(f'Error generating description: {e}')
+            raise OpenAIError()
 
     async def _ensure_place_is_unique(
         self, user_id: int, place_data: PlaceCreationRequest, formatted_city: str
