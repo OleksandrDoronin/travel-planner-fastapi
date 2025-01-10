@@ -4,7 +4,7 @@ from pydantic_ai import Agent
 from pydantic_ai.models.openai import OpenAIModel
 
 from src.places.exceptions import OpenAIError
-from src.places.schemas.description_ai import DescriptionResponse
+from src.places.schemas.openai import PlaceDetailResponse
 from src.settings import settings
 
 
@@ -26,11 +26,11 @@ class DescriptionOpenAIRepository:
         )
         return Agent(
             model=model,
-            result_type=DescriptionResponse,
+            result_type=PlaceDetailResponse,
             system_prompt='You are a helpful assistant.',
         )
 
-    async def get_description(self, prompt: str) -> DescriptionResponse:
+    async def get_place_detail(self, prompt: str) -> PlaceDetailResponse:
         """
         Interacts with the OpenAI API through an agent and
         returns the result as a DescriptionResponse.
@@ -38,7 +38,9 @@ class DescriptionOpenAIRepository:
         try:
             response = await self.agent.run(user_prompt=prompt)
             print(response)
-            return DescriptionResponse(description=response.data.description)
+            return PlaceDetailResponse(
+                description=response.data.description, photo_url=response.data.photo_url
+            )
         except Exception as e:
             logger.error(f'Error while interacting with OpenAI API: {e}')
             raise OpenAIError()

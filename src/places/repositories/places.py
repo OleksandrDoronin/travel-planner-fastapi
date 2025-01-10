@@ -11,6 +11,7 @@ from src.dependencies import get_db
 from src.models import Place
 from src.places.exceptions import PlaceError
 from src.places.schemas.filters import PlaceFilter
+from src.places.schemas.openai import PlaceDetailResponse
 from src.places.schemas.places import PlaceCreationRequest, PlaceUpdateRequest
 
 
@@ -25,14 +26,15 @@ class PlaceRepository:
         self.db_session = db_session
 
     async def create_place(
-        self, user_id: int, place: PlaceCreationRequest, description: str
+        self, user_id: int, place: PlaceCreationRequest, place_detail: PlaceDetailResponse
     ) -> Place:
         """
         Creates a new place for the user.
         """
         try:
             place_data_dict = place.model_dump()
-            place_data_dict['description'] = description
+            place_data_dict['description'] = place_detail.description
+            place_data_dict['photo_url'] = place_detail.photo_url
 
             place = Place(**place_data_dict)
             place.user_id = user_id

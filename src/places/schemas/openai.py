@@ -1,11 +1,12 @@
 from pydantic import BaseModel
 
 
-class DescriptionRequest(BaseModel):
+class PlaceInfoRequest(BaseModel):
     place_name: str
     city: str | None = None
     country: str | None = None
 
 
-class DescriptionResponse(BaseModel):
+class PlaceDetailResponse(BaseModel):
     description: str
+    photo_url: str

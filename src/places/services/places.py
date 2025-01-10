@@ -13,6 +13,7 @@ from src.places.repositories.geo_names import GeoRepository
 from src.places.repositories.openai import DescriptionOpenAIRepository
 from src.places.repositories.places import PlaceRepository
 from src.places.schemas.filters import PlaceFilter
+from src.places.schemas.openai import PlaceDetailResponse
 from src.places.schemas.places import PlaceCreationRequest, PlaceResponse, PlaceUpdateRequest
 from src.places.utils.location_utils import format_location, generate_cache_key, is_location_valid
 from src.places.utils.prompts import generate_description_prompt
@@ -59,19 +60,21 @@ class PlaceService:
         )
 
         # Generate description for the place
-        description = await self._generate_description(
+        place_detail = await self._generate_place_detail(
             place_data=place_data, city=formatted_city, country=formatted_country
         )
 
         place = await self.place_repository.create_place(
-            place=place_data, user_id=user_id, description=description
+            place=place_data,
+            user_id=user_id,
+            place_detail=place_detail,
         )
 
         return PlaceResponse.model_validate(place)
 
-    async def _generate_description(
+    async def _generate_place_detail(
         self, place_data: PlaceCreationRequest, city: str, country: str
-    ) -> str:
+    ) -> PlaceDetailResponse:
         """
         Generates a description for a place using OpenAI.
         """
@@ -82,10 +85,13 @@ class PlaceService:
         )
 
         try:
-            description_response = await self.openai_repository.get_description(
+            description_response = await self.openai_repository.get_place_detail(
                 prompt=description_prompt
             )
-            return description_response.description
+            return PlaceDetailResponse(
+                description=description_response.description,
+                photo_url=description_response.photo_url,
+            )
 
         except Exception as e:
             logger.error(f'Error generating description: {e}')

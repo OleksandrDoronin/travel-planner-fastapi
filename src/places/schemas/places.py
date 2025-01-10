@@ -13,7 +13,6 @@ class PlaceCreationRequest(BaseModel):
     city: str | None = None
     country: str | None = None
     description: constr(min_length=0, max_length=500) | None = None
-    photo_url: str | None = None
     rating: PlaceRating | None = None
     days_spent: conint(ge=0, le=365) | None = None
     visit_date: date | None = None
